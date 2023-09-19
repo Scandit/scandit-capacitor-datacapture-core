@@ -1228,15 +1228,8 @@ var capacitorPlugin = (function (exports, core) {
             return proxy;
         }
         static getLastFrame() {
-            return new Promise(resolve => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetLastFrame]().then((frameDataJSONString) => {
-                let parsedData;
-                if (frameDataJSONString.data) {
-                    parsedData = JSON.parse(frameDataJSONString.data);
-                }
-                else {
-                    parsedData = frameDataJSONString;
-                }
-                resolve(PrivateFrameData.fromJSON(parsedData));
+            return new Promise(resolve => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetLastFrame]().then((result) => {
+                resolve(PrivateFrameData.fromJSON(JSON.parse(result.data)));
             }));
         }
         static getLastFrameOrNull() {
@@ -1245,17 +1238,19 @@ var capacitorPlugin = (function (exports, core) {
                 if (!frameDataJSONString) {
                     return resolve(null);
                 }
-                resolve(PrivateFrameData.fromJSON(JSON.parse(frameDataJSONString)));
+                resolve(PrivateFrameData.fromJSON(JSON.parse(frameDataJSONString.data)));
             }));
         }
         getCurrentState() {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetCurrentCameraState]()
-                .then(resolve, reject));
+                .then((result) => {
+                resolve(result.data);
+            }, reject));
         }
         getIsTorchAvailable() {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetIsTorchAvailable]({
                 position: this.camera.position,
-            }).then(resolve, reject));
+            }).then((result) => { resolve(result.data); }, reject));
         }
     }
 
@@ -1398,8 +1393,8 @@ var capacitorPlugin = (function (exports, core) {
 
     var DataCaptureContextListenerEvent;
     (function (DataCaptureContextListenerEvent) {
-        DataCaptureContextListenerEvent["DidChangeContextStatus"] = "didChangeStatus";
-        DataCaptureContextListenerEvent["DidStartObservingContext"] = "didStartObservingContext";
+        DataCaptureContextListenerEvent["DidChangeContextStatus"] = "DataCaptureContextListener.onStatusChanged";
+        DataCaptureContextListenerEvent["DidStartObservingContext"] = "DataCaptureContextListener.onObservationStarted";
     })(DataCaptureContextListenerEvent || (DataCaptureContextListenerEvent = {}));
     // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
     // enum DataCaptureContextFrameListenerEvent {
@@ -1423,8 +1418,6 @@ var capacitorPlugin = (function (exports, core) {
         }
         initialize() {
             this.subscribeListener();
-            // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-            // this.subscribeFrameListener();
             this.initializeContextFromJSON();
         }
         initializeContextFromJSON() {
@@ -1439,11 +1432,6 @@ var capacitorPlugin = (function (exports, core) {
             window.Capacitor.Plugins[Capacitor.pluginName]
                 .addListener(DataCaptureContextListenerEvent.DidStartObservingContext, this.notifyListeners.bind(this));
         }
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // private subscribeFrameListener() {
-        //     window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeContextFrameListener]()
-        //     .then(this.notifyFrameListeners.bind(this), null)
-        // }
         notifyListeners(event) {
             if (!event) {
                 // The event could be undefined/null in case the plugin result did not pass a "message",
@@ -1451,12 +1439,11 @@ var capacitorPlugin = (function (exports, core) {
                 // listener subscriptions.
                 return;
             }
-            event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
             this.context.listeners.forEach((listener) => {
                 switch (event.name) {
                     case DataCaptureContextListenerEvent.DidChangeContextStatus:
                         if (listener.didChangeStatus) {
-                            const contextStatus = ContextStatus.fromJSON(event.context);
+                            const contextStatus = ContextStatus.fromJSON(event.status);
                             listener.didChangeStatus(this.context, contextStatus);
                         }
                         break;
@@ -1489,9 +1476,6 @@ var capacitorPlugin = (function (exports, core) {
         }
     }
     class DataCaptureContext extends DefaultSerializeable {
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // @ignoreFromSerialization
-        // private frameListeners: DataCaptureContextFrameListener[] = [];
         get frameSource() {
             return this._frameSource;
         }
@@ -1546,20 +1530,6 @@ var capacitorPlugin = (function (exports, core) {
             }
             this.listeners.splice(this.listeners.indexOf(listener), 1);
         }
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // public addFrameListener(frameListener: DataCaptureContextFrameListener) {
-        //   if (this.frameListeners.includes(frameListener)) {
-        //     return;
-        //   }
-        //   this.frameListeners.push(frameListener);
-        // }
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // public removeFrameListener(frameListener: DataCaptureContextFrameListener) {
-        //   if (!this.frameListeners.includes(frameListener)) {
-        //     return;
-        //   }
-        //   this.frameListeners.splice(this.frameListeners.indexOf(frameListener), 1);
-        // }
         addMode(mode) {
             if (!this.modes.includes(mode)) {
                 this.modes.push(mode);
@@ -1623,7 +1593,7 @@ var capacitorPlugin = (function (exports, core) {
 
     var DataCaptureViewListenerEvent;
     (function (DataCaptureViewListenerEvent) {
-        DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "didChangeSizeOrientation";
+        DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "DataCaptureViewListener.onSizeChanged";
     })(DataCaptureViewListenerEvent || (DataCaptureViewListenerEvent = {}));
     class DataCaptureViewProxy {
         static forDataCaptureView(view) {
@@ -1646,13 +1616,16 @@ var capacitorPlugin = (function (exports, core) {
         viewPointForFramePoint(point) {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.ViewPointForFramePoint]({
                 point: point.toJSON(),
-            }).then((convertedPoint) => resolve(Point.fromJSON(convertedPoint)), reject.bind(this)));
+            }).then((result) => resolve(Point.fromJSON(JSON.parse(result.data))), reject.bind(this)));
         }
         viewQuadrilateralForFrameQuadrilateral(quadrilateral) {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.ViewQuadrilateralForFrameQuadrilateral]({
                 point: quadrilateral.toJSON(),
-            }).then((convertedQuadrilateral) => resolve(Quadrilateral
-                .fromJSON(convertedQuadrilateral)), reject.bind(this)));
+            }).then((result) => {
+                const quadrilateral = Quadrilateral
+                    .fromJSON(JSON.parse(result.data));
+                resolve(quadrilateral);
+            }, reject.bind(this)));
         }
         subscribeListener() {
             window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeViewListener]();
@@ -1664,7 +1637,7 @@ var capacitorPlugin = (function (exports, core) {
                 // The event could be undefined/null in case the plugin result did not pass a "message",
                 // which could happen e.g. in case of "ok" results, which could signal e.g. successful
                 // listener subscriptions.
-                return doReturnWithFinish('', null);
+                return;
             }
             event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
             this.view.listeners.forEach((listener) => {
@@ -1674,7 +1647,6 @@ var capacitorPlugin = (function (exports, core) {
                             const size = Size.fromJSON(event.size);
                             const orientation = event.orientation;
                             listener.didChangeSize(this.view, size, orientation);
-                            return doReturnWithFinish(event.name, null);
                         }
                         break;
                 }
@@ -2036,7 +2008,7 @@ var capacitorPlugin = (function (exports, core) {
 
     class DataCaptureVersion {
         static get pluginVersion() {
-            return '6.18.2';
+            return '6.19.0';
         }
     }
 

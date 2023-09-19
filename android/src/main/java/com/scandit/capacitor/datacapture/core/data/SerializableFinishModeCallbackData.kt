@@ -8,7 +8,6 @@ package com.scandit.capacitor.datacapture.core.data
 import org.json.JSONObject
 
 class SerializableFinishModeCallbackData(val enabled: Boolean) {
-
     companion object {
         private const val FIELD_ENABLED = "enabled"
 

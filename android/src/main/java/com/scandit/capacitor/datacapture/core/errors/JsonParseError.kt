@@ -6,8 +6,11 @@
 
 package com.scandit.capacitor.datacapture.core.errors
 
-class JsonParseError(error: String?) : ActionError(
-    ERROR_CODE, "Invalid or no JSON passed for command: ${error ?: "No additional info"}"
+class JsonParseError(
+    error: String?
+) : ActionError(
+    ERROR_CODE,
+    "Invalid or no JSON passed for command: ${error ?: "No additional info"}"
 ) {
     companion object {
         private const val ERROR_CODE = 10001

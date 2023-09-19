@@ -7,15 +7,8 @@ export class CameraProxy {
         return proxy;
     }
     static getLastFrame() {
-        return new Promise(resolve => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetLastFrame]().then((frameDataJSONString) => {
-            let parsedData;
-            if (frameDataJSONString.data) {
-                parsedData = JSON.parse(frameDataJSONString.data);
-            }
-            else {
-                parsedData = frameDataJSONString;
-            }
-            resolve(PrivateFrameData.fromJSON(parsedData));
+        return new Promise(resolve => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetLastFrame]().then((result) => {
+            resolve(PrivateFrameData.fromJSON(JSON.parse(result.data)));
         }));
     }
     static getLastFrameOrNull() {
@@ -24,17 +17,19 @@ export class CameraProxy {
             if (!frameDataJSONString) {
                 return resolve(null);
             }
-            resolve(PrivateFrameData.fromJSON(JSON.parse(frameDataJSONString)));
+            resolve(PrivateFrameData.fromJSON(JSON.parse(frameDataJSONString.data)));
         }));
     }
     getCurrentState() {
         return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetCurrentCameraState]()
-            .then(resolve, reject));
+            .then((result) => {
+            resolve(result.data);
+        }, reject));
     }
     getIsTorchAvailable() {
         return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetIsTorchAvailable]({
             position: this.camera.position,
-        }).then(resolve, reject));
+        }).then((result) => { resolve(result.data); }, reject));
     }
 }
 //# sourceMappingURL=CameraProxy.js.map
