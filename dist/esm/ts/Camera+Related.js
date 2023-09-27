@@ -1,5 +1,11 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 import { Capacitor } from './Capacitor/Capacitor';
-import { DefaultSerializeable } from './Serializeable';
+import { DefaultSerializeable, ignoreFromSerialization } from './Serializeable';
 export var FrameSourceState;
 (function (FrameSourceState) {
     FrameSourceState["On"] = "on";
@@ -75,13 +81,22 @@ export class CameraSettings extends DefaultSerializeable {
         settings.zoomGestureZoomFactor = json.zoomGestureZoomFactor;
         settings.focusGestureStrategy = json.focusGestureStrategy;
         settings.shouldPreferSmoothAutoFocus = json.shouldPreferSmoothAutoFocus;
-        if (json.api !== undefined && json.api !== null) {
-            settings.api = json.api;
+        if (json.properties != undefined) {
+            for (const key of Object.keys(json.properties)) {
+                settings.setProperty(key, json.properties[key]);
+            }
         }
         return settings;
     }
     constructor(settings) {
         super();
+        this.focusHiddenProperties = [
+            'range',
+            'manualLensPosition',
+            'shouldPreferSmoothAutoFocus',
+            'focusStrategy',
+            'focusGestureStrategy'
+        ];
         this.preferredResolution = Capacitor.defaults.Camera.Settings.preferredResolution;
         this.zoomFactor = Capacitor.defaults.Camera.Settings.zoomFactor;
         this.zoomGestureZoomFactor = Capacitor.defaults.Camera.Settings.zoomGestureZoomFactor;
@@ -98,12 +113,22 @@ export class CameraSettings extends DefaultSerializeable {
         }
     }
     setProperty(name, value) {
+        if (this.focusHiddenProperties.includes(name)) {
+            this.focus[name] = value;
+            return;
+        }
         this[name] = value;
     }
     getProperty(name) {
+        if (this.focusHiddenProperties.includes(name)) {
+            return this.focus[name];
+        }
         return this[name];
     }
 }
+__decorate([
+    ignoreFromSerialization
+], CameraSettings.prototype, "focusHiddenProperties", void 0);
 export class ImageBuffer {
     get width() {
         return this._width;
