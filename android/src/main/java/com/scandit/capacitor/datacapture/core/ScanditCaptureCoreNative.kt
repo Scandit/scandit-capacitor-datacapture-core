@@ -22,6 +22,7 @@ import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureVi
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceListener
 import com.scandit.datacapture.frameworks.core.utils.LastFrameData
+import com.scandit.datacapture.frameworks.core.utils.MainThread
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -195,7 +196,9 @@ class ScanditCaptureCoreNative :
         val jsonString = call.data.getString("context")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
-        coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
+        MainThread.runOnMainThread {
+            coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
+        }
     }
 
     //endregion
@@ -263,6 +266,9 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun subscribeViewListener(call: PluginCall) = call.resolve()
+
+    @PluginMethod
+    fun unsubscribeViewListener(call: PluginCall) = call.resolve()
 
     @PluginMethod
     fun getLastFrame(call: PluginCall) {

@@ -774,6 +774,7 @@ var capacitorPlugin = (function (exports, core) {
         CapacitorFunction["ViewPointForFramePoint"] = "viewPointForFramePoint";
         CapacitorFunction["ViewQuadrilateralForFrameQuadrilateral"] = "viewQuadrilateralForFrameQuadrilateral";
         CapacitorFunction["SubscribeViewListener"] = "subscribeViewListener";
+        CapacitorFunction["UnsubscribeViewListener"] = "unsubscribeViewListener";
         CapacitorFunction["GetCurrentCameraState"] = "getCurrentCameraState";
         CapacitorFunction["GetIsTorchAvailable"] = "getIsTorchAvailable";
         CapacitorFunction["GetLastFrame"] = "getLastFrame";
@@ -1655,6 +1656,11 @@ var capacitorPlugin = (function (exports, core) {
         }
         subscribeListener() {
             window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeViewListener]();
+        }
+        unregisterListenerForViewEvents() {
+            window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.UnsubscribeViewListener]();
+        }
+        subscribeDidChangeSize() {
             window.Capacitor.Plugins[Capacitor.pluginName]
                 .addListener(DataCaptureViewListenerEvent.DidChangeSizeOrientation, this.notifyListeners.bind(this));
         }
@@ -2034,7 +2040,7 @@ var capacitorPlugin = (function (exports, core) {
 
     class DataCaptureVersion {
         static get pluginVersion() {
-            return '6.19.5';
+            return '6.20.0';
         }
     }
 

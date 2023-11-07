@@ -15,6 +15,7 @@ CAP_PLUGIN(ScanditCapacitorCore, "ScanditCaptureCoreNative",
            CAP_PLUGIN_METHOD(subscribeContextListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeContextFrameListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeViewListener, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(unsubscribeViewListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeVolumeButtonObserver, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(unsubscribeVolumeButtonObserver, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(disposeContext, CAPPluginReturnPromise);
