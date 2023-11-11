@@ -1,6 +1,6 @@
 export class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.20.0';
+        return '6.19.6';
     }
 }
 //# sourceMappingURL=DataCaptureVersion.js.map

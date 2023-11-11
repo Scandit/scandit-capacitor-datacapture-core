@@ -168,11 +168,6 @@ public class ScanditCapacitorCore: CAPPlugin {
         call.resolve()
     }
 
-    @objc(unsubscribeViewListener:)
-    func unsubscribeViewListener(_ call: CAPPluginCall) {
-        call.resolve()
-    }
-
     @objc(subscribeVolumeButtonObserver:)
     func subscribeVolumeButtonObserver(_ call: CAPPluginCall) {
         volumeButtonObserver = VolumeButtonObserver(handler: { [weak self] in

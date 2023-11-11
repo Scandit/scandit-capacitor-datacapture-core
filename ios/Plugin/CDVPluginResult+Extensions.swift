@@ -67,7 +67,6 @@ public struct ListenerEvent {
         case didCaptureInIdCapture = "IdCaptureListener.didCaptureId"
         case didLocalizeInIdCapture = "IdCaptureListener.didLocalizeId"
         case didRejectInIdCapture = "IdCaptureListener.didRejectId"
-        case didTimoutInIdCapture = "IdCaptureListener.didTimeout"
 
         // VolumeButtonObserver
         case didChangeVolume = "didChangeVolume"
