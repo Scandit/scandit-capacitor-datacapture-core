@@ -8,6 +8,10 @@ import WebKit
 
 public extension WKWebView {
     var adjustedContentInset: UIEdgeInsets {
-        scrollView.adjustedContentInset
+        if #available(iOS 11.0, *) {
+            return scrollView.adjustedContentInset
+        } else {
+            return scrollView.contentInset
+        }
     }
 }

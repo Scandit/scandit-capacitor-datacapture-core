@@ -1,27 +1,22 @@
 PODS:
-  - Capacitor (4.3.0):
+  - Capacitor (2.4.3):
     - CapacitorCordova
-  - CapacitorCordova (4.3.0)
-  - scandit-datacapture-frameworks-core (6.19.0-beta.1-SNAPSHOT)
+  - CapacitorCordova (2.4.3)
 
 DEPENDENCIES:
   - "Capacitor (from `../node_modules/@capacitor/ios`)"
   - "CapacitorCordova (from `../node_modules/@capacitor/ios`)"
-  - scandit-datacapture-frameworks-core (from `../../../shared/ios/scandit-datacapture-frameworks-core`)
 
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../node_modules/@capacitor/ios"
   CapacitorCordova:
     :path: "../node_modules/@capacitor/ios"
-  scandit-datacapture-frameworks-core:
-    :path: "../../../shared/ios/scandit-datacapture-frameworks-core"
 
 SPEC CHECKSUMS:
-  Capacitor: 5534f805df231c76164e1d63119bff7b4eac6cd5
-  CapacitorCordova: 19a82a3b91fbeb9bdd049729551edc3cd7e5e648
-  scandit-datacapture-frameworks-core: 9ff8f9347a3afd959a8a33ba39c2b52f14c6f016
+  Capacitor: 723817d2a46affb831c80233f2abc502ff63b37a
+  CapacitorCordova: 7b6eb536dd6d517a32056341575bb0b187bd44a5
 
-PODFILE CHECKSUM: 09aad78cba3cec9de05abf9f925b1d497fb2816d
+PODFILE CHECKSUM: de8f043df184adbe7d96deb134343c75afd6175a
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.9.3

@@ -1,8 +1,9 @@
 import { Point, Quadrilateral, Size, } from '../Common';
 import { Capacitor, CapacitorFunction } from './Capacitor';
+import { doReturnWithFinish } from './CommonCapacitor';
 var DataCaptureViewListenerEvent;
 (function (DataCaptureViewListenerEvent) {
-    DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "DataCaptureViewListener.onSizeChanged";
+    DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "didChangeSizeOrientation";
 })(DataCaptureViewListenerEvent || (DataCaptureViewListenerEvent = {}));
 export class DataCaptureViewProxy {
     static forDataCaptureView(view) {
@@ -25,16 +26,13 @@ export class DataCaptureViewProxy {
     viewPointForFramePoint(point) {
         return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.ViewPointForFramePoint]({
             point: point.toJSON(),
-        }).then((result) => resolve(Point.fromJSON(JSON.parse(result.data))), reject.bind(this)));
+        }).then((convertedPoint) => resolve(Point.fromJSON(convertedPoint)), reject.bind(this)));
     }
     viewQuadrilateralForFrameQuadrilateral(quadrilateral) {
         return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.ViewQuadrilateralForFrameQuadrilateral]({
             point: quadrilateral.toJSON(),
-        }).then((result) => {
-            const quadrilateral = Quadrilateral
-                .fromJSON(JSON.parse(result.data));
-            resolve(quadrilateral);
-        }, reject.bind(this)));
+        }).then((convertedQuadrilateral) => resolve(Quadrilateral
+            .fromJSON(convertedQuadrilateral)), reject.bind(this)));
     }
     subscribeListener() {
         window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeViewListener]();
@@ -46,7 +44,7 @@ export class DataCaptureViewProxy {
             // The event could be undefined/null in case the plugin result did not pass a "message",
             // which could happen e.g. in case of "ok" results, which could signal e.g. successful
             // listener subscriptions.
-            return;
+            return doReturnWithFinish('', null);
         }
         event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
         this.view.listeners.forEach((listener) => {
@@ -56,6 +54,7 @@ export class DataCaptureViewProxy {
                         const size = Size.fromJSON(event.size);
                         const orientation = event.orientation;
                         listener.didChangeSize(this.view, size, orientation);
+                        return doReturnWithFinish(event.name, null);
                     }
                     break;
             }
