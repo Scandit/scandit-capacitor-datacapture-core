@@ -2,8 +2,8 @@ import { ContextStatus } from '../DataCaptureContext+Related';
 import { Capacitor, CapacitorFunction } from './Capacitor';
 var DataCaptureContextListenerEvent;
 (function (DataCaptureContextListenerEvent) {
-    DataCaptureContextListenerEvent["DidChangeContextStatus"] = "didChangeStatus";
-    DataCaptureContextListenerEvent["DidStartObservingContext"] = "didStartObservingContext";
+    DataCaptureContextListenerEvent["DidChangeContextStatus"] = "DataCaptureContextListener.onStatusChanged";
+    DataCaptureContextListenerEvent["DidStartObservingContext"] = "DataCaptureContextListener.onObservationStarted";
 })(DataCaptureContextListenerEvent || (DataCaptureContextListenerEvent = {}));
 // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
 // enum DataCaptureContextFrameListenerEvent {
@@ -27,8 +27,6 @@ export class DataCaptureContextProxy {
     }
     initialize() {
         this.subscribeListener();
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // this.subscribeFrameListener();
         this.initializeContextFromJSON();
     }
     initializeContextFromJSON() {
@@ -43,11 +41,6 @@ export class DataCaptureContextProxy {
         window.Capacitor.Plugins[Capacitor.pluginName]
             .addListener(DataCaptureContextListenerEvent.DidStartObservingContext, this.notifyListeners.bind(this));
     }
-    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-    // private subscribeFrameListener() {
-    //     window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeContextFrameListener]()
-    //     .then(this.notifyFrameListeners.bind(this), null)
-    // }
     notifyListeners(event) {
         if (!event) {
             // The event could be undefined/null in case the plugin result did not pass a "message",
@@ -55,12 +48,11 @@ export class DataCaptureContextProxy {
             // listener subscriptions.
             return;
         }
-        event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
         this.context.listeners.forEach((listener) => {
             switch (event.name) {
                 case DataCaptureContextListenerEvent.DidChangeContextStatus:
                     if (listener.didChangeStatus) {
-                        const contextStatus = ContextStatus.fromJSON(event.context);
+                        const contextStatus = ContextStatus.fromJSON(event.status);
                         listener.didChangeStatus(this.context, contextStatus);
                     }
                     break;

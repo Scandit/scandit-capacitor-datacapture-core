@@ -9,64 +9,64 @@ import Capacitor
 public struct ListenerEvent {
     public enum Name: String, Decodable {
         // Context listener
-        case didChangeContextStatus = "didChangeStatus"
-        case didStartObservingContext = "didStartObservingContext"
+        case didChangeContextStatus = "DataCaptureContextListener.onStatusChanged"
+        case didStartObservingContext = "DataCaptureContextListener.onObservationStarted"
 
         // Context frame listener
         case willProcessFrame = "willProcessFrame"
         case didProcessFrame = "didProcessFrame"
 
         // View listener
-        case didChangeSize = "didChangeSizeOrientation"
+        case didChangeSize = "DataCaptureViewListener.onSizeChanged"
 
         // Barcode Capture listener
-        case didScanInBarcodeCapture = "onBarcodeScannedEvent"
-        case didUpdateSessionInBarcodeCapture = "onSessionUpdateEvent"
+        case didScanInBarcodeCapture = "BarcodeCaptureListener.didScan"
+        case didUpdateSessionInBarcodeCapture = "BarcodeCaptureListener.didUpdateSession"
 
         // Barcode Tracking listener
-        case didUpdateSessionInBarcodeTracking = "onTrackingSessionUpdateEvent"
+        case didUpdateSessionInBarcodeTracking = "BarcodeTrackingListener.didUpdateSession"
 
         // Barcode Tracking Basic Overlay listener
-        case brushForTrackedBarcode = "onBrushForTrackedBarcodeEvent"
-        case didTapTrackedBarcode = "onDidTapTrackedBarcodeEvent"
+        case brushForTrackedBarcode = "BarcodeTrackingBasicOverlayListener.brushForTrackedBarcode"
+        case didTapTrackedBarcode = "BarcodeTrackingBasicOverlayListener.didTapTrackedBarcode"
 
         // Barcode Tracking Advanced Overlay listener
-        case viewForTrackedBarcode = "onViewForTrackedBarcodeEvent"
-        case anchorForTrackedBarcode = "onAnchorForTrackedBarcodeEvent"
-        case offsetForTrackedBarcode = "onOffsetForTrackedBarcodeEvent"
-        case didTapViewForTrackedBarcode = "onTapViewForTrackedBarcodeEvent"
+        case viewForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.viewForTrackedBarcode"
+        case anchorForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.anchorForTrackedBarcode"
+        case offsetForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.offsetForTrackedBarcode"
+        case didTapViewForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.didTapViewForTrackedBarcode"
 
         // Barcode Selection listener
-        case didUpdateSelectionInBarcodeSelection = "didUpdateSelectionInBarcodeSelection"
-        case didUpdateSessionInBarcodeSelection = "didUpdateSessionInBarcodeSelection"
+        case didUpdateSelectionInBarcodeSelection = "BarcodeSelectionListener.didUpdateSelection"
+        case didUpdateSessionInBarcodeSelection = "BarcodeSelectionListener.didUpdateSession"
 
         // Barcode Count listener
-        case didScanInBarcodeCount = "barcodeCountListener-scan"
+        case didScanInBarcodeCount = "BarcodeCountListener.onScan"
 
         // Barcode Count View listener
-        case barcodeCountViewBrushForRecognizedBarcode = "barcodeCountViewListener-brushForRecognizedBarcode"
-        case barcodeCountViewBrushForUnrecognizedBarcode = "barcodeCountViewListener-brushForUnrecognizedBarcode"
-        case barcodeCountViewBrushForRecognizedBarcodeNotInList = "barcodeCountViewListener-brushForRecognizedBarcodeNotInList"
-        case barcodeCountViewDidTapRecognizedBarcode = "barcodeCountViewListener-onRecognizedBarcodeTapped"
-        case barcodeCountViewDidTapUnrecognizedBarcode = "barcodeCountViewListener-onUnrecognizedBarcodeTapped"
-        case barcodeCountViewDidTapRecognizedBarcodeNotInList = "barcodeCountViewListener-onRecognizedBarcodeNotInListTapped"
-        case barcodeCountViewDidTapFilteredBarcode = "barcodeCountViewListener-onFilteredBarcodeTapped"
+        case barcodeCountViewBrushForRecognizedBarcode = "BarcodeCountViewListener.brushForRecognizedBarcode"
+        case barcodeCountViewBrushForUnrecognizedBarcode = "BarcodeCountViewListener.brushForUnrecognizedBarcode"
+        case barcodeCountViewBrushForRecognizedBarcodeNotInList = "BarcodeCountViewListener.brushForRecognizedBarcodeNotInList"
+        case barcodeCountViewDidTapRecognizedBarcode = "BarcodeCountViewListener.didTapRecognizedBarcode"
+        case barcodeCountViewDidTapUnrecognizedBarcode = "BarcodeCountViewListener.didTapUnrecognizedBarcode"
+        case barcodeCountViewDidTapRecognizedBarcodeNotInList = "BarcodeCountViewListener.didTapRecognizedBarcodeNotInList"
+        case barcodeCountViewDidTapFilteredBarcode = "BarcodeCountViewListener.didTapFilteredBarcode"
 
         // Barcode Count View UI Listener
-        case barcodeCountViewListButtonTapped = "barcodeCountViewUiListener-onListButtonTapped"
-        case barcodeCountViewExitButtonTapped = "barcodeCountViewUiListener-onExitButtonTapped"
-        case barcodeCountViewSingleScanButtonTapped = "barcodeCountViewUiListener-onSingleScanButtonTapped"
+        case barcodeCountViewListButtonTapped = "BarcodeCountViewUiListener.onListButtonTapped"
+        case barcodeCountViewExitButtonTapped = "BarcodeCountViewUiListener.onExitButtonTapped"
+        case barcodeCountViewSingleScanButtonTapped = "BarcodeCountViewUiListener.onSingleScanButtonTapped"
 
-        case captureListCompleted = "barcodeCountViewListener-onCaptureListCompleted"
-        case captureListUpdated = "barcodeCountCaptureListListener-onCaptureListSessionUpdated"
+        case captureListCompleted = "BarcodeCountViewListener.didCompleteCaptureList"
+        case captureListUpdated = "BarcodeCountCaptureListListener.didUpdateSession"
 
         // Text Capture Listener
         case didCaptureInTextCapture = "didCaptureInTextCapture"
 
         // ID Capture Listener
-        case didCaptureInIdCapture = "didCaptureInIdCapture"
-        case didLocalizeInIdCapture = "didLocalizeInIdCapture"
-        case didRejectInIdCapture = "didRejectInIdCapture"
+        case didCaptureInIdCapture = "IdCaptureListener.didCaptureId"
+        case didLocalizeInIdCapture = "IdCaptureListener.didLocalizeId"
+        case didRejectInIdCapture = "IdCaptureListener.didRejectId"
 
         // VolumeButtonObserver
         case didChangeVolume = "didChangeVolume"

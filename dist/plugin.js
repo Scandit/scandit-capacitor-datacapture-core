@@ -129,7 +129,7 @@ var capacitorPlugin = (function (exports, core) {
         }
     }
 
-    var __decorate$7 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var __decorate$8 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
         var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
         else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
@@ -151,10 +151,10 @@ var capacitorPlugin = (function (exports, core) {
             this._y = y;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('x')
     ], Point.prototype, "_x", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('y')
     ], Point.prototype, "_y", void 0);
     class Quadrilateral extends DefaultSerializeable {
@@ -181,16 +181,16 @@ var capacitorPlugin = (function (exports, core) {
             this._bottomLeft = bottomLeft;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('topLeft')
     ], Quadrilateral.prototype, "_topLeft", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('topRight')
     ], Quadrilateral.prototype, "_topRight", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('bottomRight')
     ], Quadrilateral.prototype, "_bottomRight", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('bottomLeft')
     ], Quadrilateral.prototype, "_bottomLeft", void 0);
     var MeasureUnit;
@@ -215,10 +215,10 @@ var capacitorPlugin = (function (exports, core) {
             this._unit = unit;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('value')
     ], NumberWithUnit.prototype, "_value", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('unit')
     ], NumberWithUnit.prototype, "_unit", void 0);
     class PointWithUnit extends DefaultSerializeable {
@@ -240,10 +240,10 @@ var capacitorPlugin = (function (exports, core) {
             this._y = y;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('x')
     ], PointWithUnit.prototype, "_x", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('y')
     ], PointWithUnit.prototype, "_y", void 0);
     class Rect extends DefaultSerializeable {
@@ -259,10 +259,10 @@ var capacitorPlugin = (function (exports, core) {
             this._size = size;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('origin')
     ], Rect.prototype, "_origin", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('size')
     ], Rect.prototype, "_size", void 0);
     class RectWithUnit extends DefaultSerializeable {
@@ -278,10 +278,10 @@ var capacitorPlugin = (function (exports, core) {
             this._size = size;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('origin')
     ], RectWithUnit.prototype, "_origin", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('size')
     ], RectWithUnit.prototype, "_size", void 0);
     class SizeWithUnit extends DefaultSerializeable {
@@ -297,10 +297,10 @@ var capacitorPlugin = (function (exports, core) {
             this._height = height;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('width')
     ], SizeWithUnit.prototype, "_width", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('height')
     ], SizeWithUnit.prototype, "_height", void 0);
     class Size extends DefaultSerializeable {
@@ -319,10 +319,10 @@ var capacitorPlugin = (function (exports, core) {
             this._height = height;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('width')
     ], Size.prototype, "_width", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('height')
     ], Size.prototype, "_height", void 0);
     class SizeWithAspect {
@@ -337,10 +337,10 @@ var capacitorPlugin = (function (exports, core) {
             this._aspect = aspect;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('size')
     ], SizeWithAspect.prototype, "_size", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('aspect')
     ], SizeWithAspect.prototype, "_aspect", void 0);
     var SizingMode;
@@ -443,16 +443,16 @@ var capacitorPlugin = (function (exports, core) {
             }
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('widthAndHeight')
     ], SizeWithUnitAndAspect.prototype, "_widthAndHeight", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('widthAndAspectRatio')
     ], SizeWithUnitAndAspect.prototype, "_widthAndAspectRatio", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('heightAndAspectRatio')
     ], SizeWithUnitAndAspect.prototype, "_heightAndAspectRatio", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('shorterDimensionAndAspectRatio')
     ], SizeWithUnitAndAspect.prototype, "_shorterDimensionAndAspectRatio", void 0);
     class MarginsWithUnit extends DefaultSerializeable {
@@ -482,16 +482,16 @@ var capacitorPlugin = (function (exports, core) {
             this._bottom = bottom;
         }
     }
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('left')
     ], MarginsWithUnit.prototype, "_left", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('right')
     ], MarginsWithUnit.prototype, "_right", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('top')
     ], MarginsWithUnit.prototype, "_top", void 0);
-    __decorate$7([
+    __decorate$8([
         nameForSerialization('bottom')
     ], MarginsWithUnit.prototype, "_bottom", void 0);
     class Color {
@@ -633,7 +633,7 @@ var capacitorPlugin = (function (exports, core) {
         LogoStyle["Extended"] = "extended";
     })(LogoStyle || (LogoStyle = {}));
 
-    var __decorate$6 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var __decorate$7 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
         var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
         else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
@@ -671,7 +671,7 @@ var capacitorPlugin = (function (exports, core) {
             this._isLooping = isLooping;
         }
     }
-    __decorate$6([
+    __decorate$7([
         nameForSerialization('isLooping')
     ], RectangularViewfinderAnimation.prototype, "_isLooping", void 0);
 
@@ -685,6 +685,7 @@ var capacitorPlugin = (function (exports, core) {
                     zoomGestureZoomFactor: json.Camera.Settings.zoomGestureZoomFactor,
                     focusGestureStrategy: json.Camera.Settings.focusGestureStrategy,
                     shouldPreferSmoothAutoFocus: json.Camera.Settings.shouldPreferSmoothAutoFocus,
+                    properties: json.Camera.Settings.properties,
                 },
                 defaultPosition: (json.Camera.defaultPosition || null),
                 availablePositions: json.Camera.availablePositions,
@@ -801,7 +802,7 @@ var capacitorPlugin = (function (exports, core) {
         return Capacitor.defaults;
     });
 
-    var __decorate$5 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var __decorate$6 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
         var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
         else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
@@ -819,7 +820,7 @@ var capacitorPlugin = (function (exports, core) {
             this._radius = radius;
         }
     }
-    __decorate$5([
+    __decorate$6([
         nameForSerialization('radius')
     ], RadiusLocationSelection.prototype, "_radius", void 0);
     class RectangularLocationSelection extends DefaultSerializeable {
@@ -848,11 +849,11 @@ var capacitorPlugin = (function (exports, core) {
             return locationSelection;
         }
     }
-    __decorate$5([
+    __decorate$6([
         nameForSerialization('size')
     ], RectangularLocationSelection.prototype, "_sizeWithUnitAndAspect", void 0);
 
-    var __decorate$4 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var __decorate$5 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
         var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
         else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
@@ -894,7 +895,7 @@ var capacitorPlugin = (function (exports, core) {
             return this._style;
         }
     }
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('style')
     ], LaserlineViewfinder.prototype, "_style", void 0);
     class RectangularViewfinder extends DefaultSerializeable {
@@ -954,23 +955,23 @@ var capacitorPlugin = (function (exports, core) {
             this._sizeWithUnitAndAspect = SizeWithUnitAndAspect.sizeWithShorterDimensionAndAspectRatio(new NumberWithUnit(fraction, MeasureUnit.Fraction), aspectRatio);
         }
     }
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('style')
     ], RectangularViewfinder.prototype, "_style", void 0);
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('lineStyle')
     ], RectangularViewfinder.prototype, "_lineStyle", void 0);
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('dimming')
     ], RectangularViewfinder.prototype, "_dimming", void 0);
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('disabledDimming')
     ], RectangularViewfinder.prototype, "_disabledDimming", void 0);
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('animation'),
         ignoreFromSerialization
     ], RectangularViewfinder.prototype, "_animation", void 0);
-    __decorate$4([
+    __decorate$5([
         nameForSerialization('size')
     ], RectangularViewfinder.prototype, "_sizeWithUnitAndAspect", void 0);
     class AimerViewfinder extends DefaultSerializeable {
@@ -982,6 +983,12 @@ var capacitorPlugin = (function (exports, core) {
         }
     }
 
+    var __decorate$4 = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+        var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+        if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+        else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+        return c > 3 && r && Object.defineProperty(target, key, r), r;
+    };
     var FrameSourceState;
     (function (FrameSourceState) {
         FrameSourceState["On"] = "on";
@@ -1057,13 +1064,22 @@ var capacitorPlugin = (function (exports, core) {
             settings.zoomGestureZoomFactor = json.zoomGestureZoomFactor;
             settings.focusGestureStrategy = json.focusGestureStrategy;
             settings.shouldPreferSmoothAutoFocus = json.shouldPreferSmoothAutoFocus;
-            if (json.api !== undefined && json.api !== null) {
-                settings.api = json.api;
+            if (json.properties != undefined) {
+                for (const key of Object.keys(json.properties)) {
+                    settings.setProperty(key, json.properties[key]);
+                }
             }
             return settings;
         }
         constructor(settings) {
             super();
+            this.focusHiddenProperties = [
+                'range',
+                'manualLensPosition',
+                'shouldPreferSmoothAutoFocus',
+                'focusStrategy',
+                'focusGestureStrategy'
+            ];
             this.preferredResolution = Capacitor.defaults.Camera.Settings.preferredResolution;
             this.zoomFactor = Capacitor.defaults.Camera.Settings.zoomFactor;
             this.zoomGestureZoomFactor = Capacitor.defaults.Camera.Settings.zoomGestureZoomFactor;
@@ -1080,12 +1096,22 @@ var capacitorPlugin = (function (exports, core) {
             }
         }
         setProperty(name, value) {
+            if (this.focusHiddenProperties.includes(name)) {
+                this.focus[name] = value;
+                return;
+            }
             this[name] = value;
         }
         getProperty(name) {
+            if (this.focusHiddenProperties.includes(name)) {
+                return this.focus[name];
+            }
             return this[name];
         }
     }
+    __decorate$4([
+        ignoreFromSerialization
+    ], CameraSettings.prototype, "focusHiddenProperties", void 0);
     class ImageBuffer {
         get width() {
             return this._width;
@@ -1228,15 +1254,8 @@ var capacitorPlugin = (function (exports, core) {
             return proxy;
         }
         static getLastFrame() {
-            return new Promise(resolve => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetLastFrame]().then((frameDataJSONString) => {
-                let parsedData;
-                if (frameDataJSONString.data) {
-                    parsedData = JSON.parse(frameDataJSONString.data);
-                }
-                else {
-                    parsedData = frameDataJSONString;
-                }
-                resolve(PrivateFrameData.fromJSON(parsedData));
+            return new Promise(resolve => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetLastFrame]().then((result) => {
+                resolve(PrivateFrameData.fromJSON(JSON.parse(result.data)));
             }));
         }
         static getLastFrameOrNull() {
@@ -1245,17 +1264,19 @@ var capacitorPlugin = (function (exports, core) {
                 if (!frameDataJSONString) {
                     return resolve(null);
                 }
-                resolve(PrivateFrameData.fromJSON(JSON.parse(frameDataJSONString)));
+                resolve(PrivateFrameData.fromJSON(JSON.parse(frameDataJSONString.data)));
             }));
         }
         getCurrentState() {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetCurrentCameraState]()
-                .then(resolve, reject));
+                .then((result) => {
+                resolve(result.data);
+            }, reject));
         }
         getIsTorchAvailable() {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.GetIsTorchAvailable]({
                 position: this.camera.position,
-            }).then(resolve, reject));
+            }).then((result) => { resolve(result.data); }, reject));
         }
     }
 
@@ -1398,8 +1419,8 @@ var capacitorPlugin = (function (exports, core) {
 
     var DataCaptureContextListenerEvent;
     (function (DataCaptureContextListenerEvent) {
-        DataCaptureContextListenerEvent["DidChangeContextStatus"] = "didChangeStatus";
-        DataCaptureContextListenerEvent["DidStartObservingContext"] = "didStartObservingContext";
+        DataCaptureContextListenerEvent["DidChangeContextStatus"] = "DataCaptureContextListener.onStatusChanged";
+        DataCaptureContextListenerEvent["DidStartObservingContext"] = "DataCaptureContextListener.onObservationStarted";
     })(DataCaptureContextListenerEvent || (DataCaptureContextListenerEvent = {}));
     // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
     // enum DataCaptureContextFrameListenerEvent {
@@ -1423,8 +1444,6 @@ var capacitorPlugin = (function (exports, core) {
         }
         initialize() {
             this.subscribeListener();
-            // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-            // this.subscribeFrameListener();
             this.initializeContextFromJSON();
         }
         initializeContextFromJSON() {
@@ -1439,11 +1458,6 @@ var capacitorPlugin = (function (exports, core) {
             window.Capacitor.Plugins[Capacitor.pluginName]
                 .addListener(DataCaptureContextListenerEvent.DidStartObservingContext, this.notifyListeners.bind(this));
         }
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // private subscribeFrameListener() {
-        //     window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeContextFrameListener]()
-        //     .then(this.notifyFrameListeners.bind(this), null)
-        // }
         notifyListeners(event) {
             if (!event) {
                 // The event could be undefined/null in case the plugin result did not pass a "message",
@@ -1451,12 +1465,11 @@ var capacitorPlugin = (function (exports, core) {
                 // listener subscriptions.
                 return;
             }
-            event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
             this.context.listeners.forEach((listener) => {
                 switch (event.name) {
                     case DataCaptureContextListenerEvent.DidChangeContextStatus:
                         if (listener.didChangeStatus) {
-                            const contextStatus = ContextStatus.fromJSON(event.context);
+                            const contextStatus = ContextStatus.fromJSON(event.status);
                             listener.didChangeStatus(this.context, contextStatus);
                         }
                         break;
@@ -1489,9 +1502,6 @@ var capacitorPlugin = (function (exports, core) {
         }
     }
     class DataCaptureContext extends DefaultSerializeable {
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // @ignoreFromSerialization
-        // private frameListeners: DataCaptureContextFrameListener[] = [];
         get frameSource() {
             return this._frameSource;
         }
@@ -1546,20 +1556,6 @@ var capacitorPlugin = (function (exports, core) {
             }
             this.listeners.splice(this.listeners.indexOf(listener), 1);
         }
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // public addFrameListener(frameListener: DataCaptureContextFrameListener) {
-        //   if (this.frameListeners.includes(frameListener)) {
-        //     return;
-        //   }
-        //   this.frameListeners.push(frameListener);
-        // }
-        // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-        // public removeFrameListener(frameListener: DataCaptureContextFrameListener) {
-        //   if (!this.frameListeners.includes(frameListener)) {
-        //     return;
-        //   }
-        //   this.frameListeners.splice(this.frameListeners.indexOf(frameListener), 1);
-        // }
         addMode(mode) {
             if (!this.modes.includes(mode)) {
                 this.modes.push(mode);
@@ -1623,7 +1619,7 @@ var capacitorPlugin = (function (exports, core) {
 
     var DataCaptureViewListenerEvent;
     (function (DataCaptureViewListenerEvent) {
-        DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "didChangeSizeOrientation";
+        DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "DataCaptureViewListener.onSizeChanged";
     })(DataCaptureViewListenerEvent || (DataCaptureViewListenerEvent = {}));
     class DataCaptureViewProxy {
         static forDataCaptureView(view) {
@@ -1646,13 +1642,16 @@ var capacitorPlugin = (function (exports, core) {
         viewPointForFramePoint(point) {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.ViewPointForFramePoint]({
                 point: point.toJSON(),
-            }).then((convertedPoint) => resolve(Point.fromJSON(convertedPoint)), reject.bind(this)));
+            }).then((result) => resolve(Point.fromJSON(JSON.parse(result.data))), reject.bind(this)));
         }
         viewQuadrilateralForFrameQuadrilateral(quadrilateral) {
             return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.ViewQuadrilateralForFrameQuadrilateral]({
                 point: quadrilateral.toJSON(),
-            }).then((convertedQuadrilateral) => resolve(Quadrilateral
-                .fromJSON(convertedQuadrilateral)), reject.bind(this)));
+            }).then((result) => {
+                const quadrilateral = Quadrilateral
+                    .fromJSON(JSON.parse(result.data));
+                resolve(quadrilateral);
+            }, reject.bind(this)));
         }
         subscribeListener() {
             window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeViewListener]();
@@ -1664,7 +1663,7 @@ var capacitorPlugin = (function (exports, core) {
                 // The event could be undefined/null in case the plugin result did not pass a "message",
                 // which could happen e.g. in case of "ok" results, which could signal e.g. successful
                 // listener subscriptions.
-                return doReturnWithFinish('', null);
+                return;
             }
             event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
             this.view.listeners.forEach((listener) => {
@@ -1674,7 +1673,6 @@ var capacitorPlugin = (function (exports, core) {
                             const size = Size.fromJSON(event.size);
                             const orientation = event.orientation;
                             listener.didChangeSize(this.view, size, orientation);
-                            return doReturnWithFinish(event.name, null);
                         }
                         break;
                 }
@@ -2036,7 +2034,7 @@ var capacitorPlugin = (function (exports, core) {
 
     class DataCaptureVersion {
         static get pluginVersion() {
-            return '6.18.3';
+            return '6.19.7';
         }
     }
 

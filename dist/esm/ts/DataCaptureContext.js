@@ -19,9 +19,6 @@ export class DataCaptureContextSettings extends DefaultSerializeable {
     }
 }
 export class DataCaptureContext extends DefaultSerializeable {
-    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-    // @ignoreFromSerialization
-    // private frameListeners: DataCaptureContextFrameListener[] = [];
     get frameSource() {
         return this._frameSource;
     }
@@ -76,20 +73,6 @@ export class DataCaptureContext extends DefaultSerializeable {
         }
         this.listeners.splice(this.listeners.indexOf(listener), 1);
     }
-    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-    // public addFrameListener(frameListener: DataCaptureContextFrameListener) {
-    //   if (this.frameListeners.includes(frameListener)) {
-    //     return;
-    //   }
-    //   this.frameListeners.push(frameListener);
-    // }
-    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
-    // public removeFrameListener(frameListener: DataCaptureContextFrameListener) {
-    //   if (!this.frameListeners.includes(frameListener)) {
-    //     return;
-    //   }
-    //   this.frameListeners.splice(this.frameListeners.indexOf(frameListener), 1);
-    // }
     addMode(mode) {
         if (!this.modes.includes(mode)) {
             this.modes.push(mode);
