@@ -184,6 +184,7 @@ export enum CapacitorFunction {
     ViewPointForFramePoint = "viewPointForFramePoint",
     ViewQuadrilateralForFrameQuadrilateral = "viewQuadrilateralForFrameQuadrilateral",
     SubscribeViewListener = "subscribeViewListener",
+    UnsubscribeViewListener = "unsubscribeViewListener",
     GetCurrentCameraState = "getCurrentCameraState",
     GetIsTorchAvailable = "getIsTorchAvailable",
     GetLastFrame = "getLastFrame",
@@ -238,6 +239,8 @@ export class DataCaptureViewProxy {
     viewPointForFramePoint(point: Point): Promise<Point>;
     viewQuadrilateralForFrameQuadrilateral(quadrilateral: Quadrilateral): Promise<Quadrilateral>;
     private subscribeListener;
+    unregisterListenerForViewEvents(): void;
+    subscribeDidChangeSize(): void;
     private notifyListeners;
     private initialize;
 }

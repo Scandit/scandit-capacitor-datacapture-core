@@ -38,6 +38,11 @@ export class DataCaptureViewProxy {
     }
     subscribeListener() {
         window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.SubscribeViewListener]();
+    }
+    unregisterListenerForViewEvents() {
+        window.Capacitor.Plugins[Capacitor.pluginName][CapacitorFunction.UnsubscribeViewListener]();
+    }
+    subscribeDidChangeSize() {
         window.Capacitor.Plugins[Capacitor.pluginName]
             .addListener(DataCaptureViewListenerEvent.DidChangeSizeOrientation, this.notifyListeners.bind(this));
     }
