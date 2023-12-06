@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { registerPlugin } from '@capacitor/core';
 import { getDefaults } from './ts/Capacitor/Capacitor';
-export * from './definitions';
 import { Color, Direction, MarginsWithUnit, MeasureUnit, NumberWithUnit, Orientation, Point, PointWithUnit, Quadrilateral, Rect, RectWithUnit, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, } from './ts/Common';
 import { RadiusLocationSelection, RectangularLocationSelection, } from './ts/LocationSelection';
 import { AimerViewfinder, Brush, LaserlineViewfinder, NoViewfinder, RectangularViewfinder, } from './ts/Viewfinder';

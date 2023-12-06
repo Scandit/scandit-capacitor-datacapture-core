@@ -1,4 +1,4 @@
-export type Optional<T> = T | null;
+export declare type Optional<T> = T | null;
 export interface ScanditCaptureCorePluginInterface {
     initializePlugins(): Promise<any>;
 }
@@ -61,15 +61,12 @@ export interface CameraSettingsJSON {
     zoomGestureZoomFactor: number;
     focusGestureStrategy: string;
     shouldPreferSmoothAutoFocus: boolean;
-    properties: {
-        [key: string]: any;
-    };
+    api: number;
 }
 interface PrivateCameraSettings {
     fromJSON(json: CameraSettingsJSON): CameraSettings;
 }
 export class CameraSettings {
-    private focusHiddenProperties;
     preferredResolution: VideoResolution;
     zoomFactor: number;
     zoomGestureZoomFactor: number;
@@ -184,7 +181,6 @@ export enum CapacitorFunction {
     ViewPointForFramePoint = "viewPointForFramePoint",
     ViewQuadrilateralForFrameQuadrilateral = "viewQuadrilateralForFrameQuadrilateral",
     SubscribeViewListener = "subscribeViewListener",
-    UnsubscribeViewListener = "unsubscribeViewListener",
     GetCurrentCameraState = "getCurrentCameraState",
     GetIsTorchAvailable = "getIsTorchAvailable",
     GetLastFrame = "getLastFrame",
@@ -201,7 +197,7 @@ export const pluginName = "ScanditCaptureCoreNative";
 export const Capacitor: {
     pluginName: string;
     defaults: Defaults;
-    exec: (success: Optional<Function>, error: Optional<Function>, functionName: string, args: Optional<[any]>) => void;
+    exec: (success: Function | null, error: Function | null, functionName: string, args: Optional<[any]>) => void;
 };
 export const getDefaults: () => Promise<Defaults>;
 
@@ -214,7 +210,7 @@ export class CapacitorError {
 export interface BlockingModeListenerResult {
     enabled: boolean;
 }
-export const capacitorExec: (successCallback: Optional<Function>, errorCallback: Optional<Function>, pluginName: string, functionName: string, args: Optional<[any]>) => void;
+export const capacitorExec: (successCallback: Function | null, errorCallback: Function | null, pluginName: string, functionName: string, args: Optional<[any]>) => void;
 export const doReturnWithFinish: (finishCallbackID: string, result: any) => any;
 
  
@@ -239,8 +235,6 @@ export class DataCaptureViewProxy {
     viewPointForFramePoint(point: Point): Promise<Point>;
     viewQuadrilateralForFrameQuadrilateral(quadrilateral: Quadrilateral): Promise<Quadrilateral>;
     private subscribeListener;
-    unregisterListenerForViewEvents(): void;
-    subscribeDidChangeSize(): void;
     private notifyListeners;
     private initialize;
 }
@@ -313,25 +307,22 @@ export interface CameraSettingsDefaultsJSON {
     zoomGestureZoomFactor: number;
     focusGestureStrategy: string;
     shouldPreferSmoothAutoFocus: boolean;
-    properties: {
-        [key: string]: any;
-    };
 }
 interface PrivateCameraSettingsDefaults {
     fromJSON(json: CameraSettingsDefaultsJSON): CameraSettings;
 }
 export interface IdCaptureOverlayDefaultsJSON {
-    DefaultCapturedBrush: {
+    defaultCapturedBrush: {
         fillColor: string;
         strokeColor: string;
         strokeWidth: number;
     };
-    DefaultLocalizedBrush: {
+    defaultLocalizedBrush: {
         fillColor: string;
         strokeColor: string;
         strokeWidth: number;
     };
-    DefaultRejectedBrush: {
+    defaultRejectedBrush: {
         fillColor: string;
         strokeColor: string;
         strokeWidth: number;
@@ -596,8 +587,7 @@ export class MarginsWithUnit {
     private static fromJSON;
     private static get zero();
     constructor(left: NumberWithUnit, right: NumberWithUnit, top: NumberWithUnit, bottom: NumberWithUnit);
-}
-type ColorJSON = string;
+} type ColorJSON = string;
 interface PrivateColor {
     fromJSON(json: ColorJSON): Color;
 }

@@ -9,13 +9,13 @@ import { DefaultSerializeable, nameForSerialization } from './Serializeable';
 // tslint:disable-next-line:variable-name
 export const NoneLocationSelection = { type: 'none' };
 export class RadiusLocationSelection extends DefaultSerializeable {
-    get radius() {
-        return this._radius;
-    }
     constructor(radius) {
         super();
         this.type = 'radius';
         this._radius = radius;
+    }
+    get radius() {
+        return this._radius;
     }
 }
 __decorate([

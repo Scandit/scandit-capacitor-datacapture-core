@@ -13,6 +13,10 @@ var VibrationType;
     VibrationType["successHaptic"] = "successHaptic";
 })(VibrationType || (VibrationType = {}));
 export class Vibration extends DefaultSerializeable {
+    constructor(type) {
+        super();
+        this.type = type;
+    }
     static fromJSON(json) {
         return new Vibration(json.type);
     }
@@ -25,28 +29,32 @@ export class Vibration extends DefaultSerializeable {
     static get successHapticFeedback() {
         return new Vibration(VibrationType.successHaptic);
     }
-    constructor(type) {
-        super();
-        this.type = type;
-    }
 }
 export class Sound extends DefaultSerializeable {
+    constructor(resource) {
+        super();
+        this.resource = null;
+        this.resource = resource;
+    }
     static fromJSON(json) {
         return new Sound(json.resource);
     }
     static get defaultSound() {
         return new Sound(null);
     }
-    constructor(resource) {
-        super();
-        this.resource = null;
-        this.resource = resource;
-    }
 }
 __decorate([
     ignoreFromSerializationIfNull
 ], Sound.prototype, "resource", void 0);
 export class Feedback extends DefaultSerializeable {
+    constructor(vibration, sound) {
+        super();
+        this._vibration = null;
+        this._sound = null;
+        this._vibration = vibration;
+        this._sound = sound;
+        this.initialize();
+    }
     static get defaultFeedback() {
         return new Feedback(Vibration.defaultVibration, Sound.defaultSound);
     }
@@ -58,14 +66,6 @@ export class Feedback extends DefaultSerializeable {
     }
     get sound() {
         return this._sound;
-    }
-    constructor(vibration, sound) {
-        super();
-        this._vibration = null;
-        this._sound = null;
-        this._vibration = vibration;
-        this._sound = sound;
-        this.initialize();
     }
     emit() {
         if (!this.proxy) {

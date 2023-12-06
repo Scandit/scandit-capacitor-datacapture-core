@@ -1,4 +1,8 @@
 export class CapacitorError {
+    constructor(code, message) {
+        this.code = code;
+        this.message = message;
+    }
     static fromJSON(json) {
         if (json && json.code && json.message) {
             return new CapacitorError(json.code, json.message);
@@ -6,10 +10,6 @@ export class CapacitorError {
         else {
             return null;
         }
-    }
-    constructor(code, message) {
-        this.code = code;
-        this.message = message;
     }
 }
 export const capacitorExec = (successCallback, errorCallback, pluginName, functionName, args) => {

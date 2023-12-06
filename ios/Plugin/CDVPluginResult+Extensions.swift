@@ -9,65 +9,45 @@ import Capacitor
 public struct ListenerEvent {
     public enum Name: String, Decodable {
         // Context listener
-        case didChangeContextStatus = "DataCaptureContextListener.onStatusChanged"
-        case didStartObservingContext = "DataCaptureContextListener.onObservationStarted"
+        case didChangeContextStatus = "didChangeStatus"
+        case didStartObservingContext = "didStartObservingContext"
 
         // Context frame listener
         case willProcessFrame = "willProcessFrame"
         case didProcessFrame = "didProcessFrame"
 
         // View listener
-        case didChangeSize = "DataCaptureViewListener.onSizeChanged"
+        case didChangeSize = "didChangeSizeOrientation"
 
         // Barcode Capture listener
-        case didScanInBarcodeCapture = "BarcodeCaptureListener.didScan"
-        case didUpdateSessionInBarcodeCapture = "BarcodeCaptureListener.didUpdateSession"
+        case didScanInBarcodeCapture = "onBarcodeScannedEvent"
+        case didUpdateSessionInBarcodeCapture = "onSessionUpdateEvent"
 
         // Barcode Tracking listener
-        case didUpdateSessionInBarcodeTracking = "BarcodeTrackingListener.didUpdateSession"
+        case didUpdateSessionInBarcodeTracking = "onTrackingSessionUpdateEvent"
 
         // Barcode Tracking Basic Overlay listener
-        case brushForTrackedBarcode = "BarcodeTrackingBasicOverlayListener.brushForTrackedBarcode"
-        case didTapTrackedBarcode = "BarcodeTrackingBasicOverlayListener.didTapTrackedBarcode"
+        case brushForTrackedBarcode = "onBrushForTrackedBarcodeEvent"
+        case didTapTrackedBarcode = "onDidTapTrackedBarcodeEvent"
 
         // Barcode Tracking Advanced Overlay listener
-        case viewForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.viewForTrackedBarcode"
-        case anchorForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.anchorForTrackedBarcode"
-        case offsetForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.offsetForTrackedBarcode"
-        case didTapViewForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.didTapViewForTrackedBarcode"
+        case viewForTrackedBarcode = "onViewForTrackedBarcodeEvent"
+        case anchorForTrackedBarcode = "onAnchorForTrackedBarcodeEvent"
+        case offsetForTrackedBarcode = "onOffsetForTrackedBarcodeEvent"
+        case didTapViewForTrackedBarcode = "onTapViewForTrackedBarcodeEvent"
 
         // Barcode Selection listener
-        case didUpdateSelectionInBarcodeSelection = "BarcodeSelectionListener.didUpdateSelection"
-        case didUpdateSessionInBarcodeSelection = "BarcodeSelectionListener.didUpdateSession"
-
-        // Barcode Count listener
-        case didScanInBarcodeCount = "BarcodeCountListener.onScan"
-
-        // Barcode Count View listener
-        case barcodeCountViewBrushForRecognizedBarcode = "BarcodeCountViewListener.brushForRecognizedBarcode"
-        case barcodeCountViewBrushForUnrecognizedBarcode = "BarcodeCountViewListener.brushForUnrecognizedBarcode"
-        case barcodeCountViewBrushForRecognizedBarcodeNotInList = "BarcodeCountViewListener.brushForRecognizedBarcodeNotInList"
-        case barcodeCountViewDidTapRecognizedBarcode = "BarcodeCountViewListener.didTapRecognizedBarcode"
-        case barcodeCountViewDidTapUnrecognizedBarcode = "BarcodeCountViewListener.didTapUnrecognizedBarcode"
-        case barcodeCountViewDidTapRecognizedBarcodeNotInList = "BarcodeCountViewListener.didTapRecognizedBarcodeNotInList"
-        case barcodeCountViewDidTapFilteredBarcode = "BarcodeCountViewListener.didTapFilteredBarcode"
-
-        // Barcode Count View UI Listener
-        case barcodeCountViewListButtonTapped = "BarcodeCountViewUiListener.onListButtonTapped"
-        case barcodeCountViewExitButtonTapped = "BarcodeCountViewUiListener.onExitButtonTapped"
-        case barcodeCountViewSingleScanButtonTapped = "BarcodeCountViewUiListener.onSingleScanButtonTapped"
-
-        case captureListCompleted = "BarcodeCountViewListener.didCompleteCaptureList"
-        case captureListUpdated = "BarcodeCountCaptureListListener.didUpdateSession"
+        case didUpdateSelectionInBarcodeSelection = "didUpdateSelectionInBarcodeSelection"
+        case didUpdateSessionInBarcodeSelection = "didUpdateSessionInBarcodeSelection"
 
         // Text Capture Listener
         case didCaptureInTextCapture = "didCaptureInTextCapture"
 
         // ID Capture Listener
-        case didCaptureInIdCapture = "IdCaptureListener.didCaptureId"
-        case didLocalizeInIdCapture = "IdCaptureListener.didLocalizeId"
-        case didRejectInIdCapture = "IdCaptureListener.didRejectId"
-        case didTimoutInIdCapture = "IdCaptureListener.didTimeout"
+        case didCaptureInIdCapture = "didCaptureInIdCapture"
+        case didFailInIdCapture = "didFailInIdCapture"
+        case didLocalizeInIdCapture = "didLocalizeInIdCapture"
+        case didRejectInIdCapture = "didRejectInIdCapture"
 
         // VolumeButtonObserver
         case didChangeVolume = "didChangeVolume"
@@ -126,12 +106,6 @@ public struct CommandError {
         case noBarcodeTrackingSession = 10076
 
         case noFrameData = 10077
-
-        case noBarcodeCount = 10078
-        case noContext = 10079
-        case barcodeCountDeserializationError = 10080
-        case barcodeCountViewDeserializationError = 10081
-        case noBarcodeCountView = 10082
     }
 
     public static let invalidJSON = CommandError(code: .invalidJSON,
@@ -192,33 +166,6 @@ public struct CommandError {
                                                message: """
                                                 There was no BarcodeSelection mode to execute the command on
                                                 """)
-
-    public static let noBarcodeCount = CommandError(code: .noBarcodeCount,
-                                                    message: """
-                                                        There was no BarcodeCount mode to execute the command on
-                                                        """)
-
-    public static let noContext = CommandError(code: .noContext,
-                                               message: """
-                                               There is no active data capture context
-                                               """)
-
-    public static func barcodeCountDeserializationError(message: String) -> CommandError {
-        CommandError(code: .barcodeCountDeserializationError,
-                     message: """
-                     An error occurred during the deserialization of the barcode count mode:\n \(message)
-                     """)
-    }
-
-    public static func barcodeCountViewDeserializationError(message: String) -> CommandError {
-        CommandError(code: .barcodeCountViewDeserializationError,
-                     message: """
-                     An error occurred during the deserialization of the barcode count view:\n \(message)
-                     """)
-    }
-
-    public static let noBarcodeCountView = CommandError(code: .noBarcodeCountView,
-                                                        message: "The barcode count view has not been initialized yet")
 
     public static let noBarcodeCaptureSession = CommandError(code: .noBarcodeCaptureSession,
                                                message: """

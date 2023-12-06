@@ -19,6 +19,22 @@ export class DataCaptureContextSettings extends DefaultSerializeable {
     }
 }
 export class DataCaptureContext extends DefaultSerializeable {
+    constructor(licenseKey, deviceName) {
+        super();
+        this.licenseKey = licenseKey;
+        this.deviceName = deviceName;
+        this.framework = 'capacitor';
+        this.frameworkVersion = (() => Capacitor.defaults.capacitorVersion)();
+        this.settings = new DataCaptureContextSettings();
+        this._frameSource = null;
+        this.view = null;
+        this.modes = [];
+        this.components = [];
+        this.listeners = [];
+    }
+    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
+    // @ignoreFromSerialization
+    // private frameListeners: DataCaptureContextFrameListener[] = [];
     get frameSource() {
         return this._frameSource;
     }
@@ -41,19 +57,6 @@ export class DataCaptureContext extends DefaultSerializeable {
         }
         return new DataCaptureContext(licenseKey, options.deviceName || '');
     }
-    constructor(licenseKey, deviceName) {
-        super();
-        this.licenseKey = licenseKey;
-        this.deviceName = deviceName;
-        this.framework = 'capacitor';
-        this.frameworkVersion = (() => Capacitor.defaults.capacitorVersion)();
-        this.settings = new DataCaptureContextSettings();
-        this._frameSource = null;
-        this.view = null;
-        this.modes = [];
-        this.components = [];
-        this.listeners = [];
-    }
     setFrameSource(frameSource) {
         this._frameSource = frameSource;
         if (frameSource) {
@@ -73,6 +76,20 @@ export class DataCaptureContext extends DefaultSerializeable {
         }
         this.listeners.splice(this.listeners.indexOf(listener), 1);
     }
+    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
+    // public addFrameListener(frameListener: DataCaptureContextFrameListener) {
+    //   if (this.frameListeners.includes(frameListener)) {
+    //     return;
+    //   }
+    //   this.frameListeners.push(frameListener);
+    // }
+    // TODO: adjust when readding framedata to the api https://jira.scandit.com/browse/SDC-1159
+    // public removeFrameListener(frameListener: DataCaptureContextFrameListener) {
+    //   if (!this.frameListeners.includes(frameListener)) {
+    //     return;
+    //   }
+    //   this.frameListeners.splice(this.frameListeners.indexOf(frameListener), 1);
+    // }
     addMode(mode) {
         if (!this.modes.includes(mode)) {
             this.modes.push(mode);

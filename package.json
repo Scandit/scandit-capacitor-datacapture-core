@@ -1,6 +1,6 @@
 {
   "name": "scandit-capacitor-datacapture-core",
-  "version": "6.20.1",
+  "version": "6.17.3",
   "description": "Scandit Data Capture SDK for Capacitor",
   "license": "Apache-2.0",
   "private": false,
@@ -14,7 +14,7 @@
   "types": "dist/esm/definitions.d.ts",
   "scripts": {
     "postbuild": "node ./scripts/normalize-d-ts.js",
-    "lint": "eslint ./src",
+    "lint": "tslint --project . && npm run swiftlint -- lint",
     "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
     "build": "npm run clean && tsc && rollup -c rollup.config.js",
@@ -22,25 +22,22 @@
     "watch": "tsc --watch"
   },
   "devDependencies": {
-    "@capacitor/android": "^5.0.0",
-    "@capacitor/core": "^5.0.0",
-    "@capacitor/ios": "^5.0.0",
+    "@capacitor/android": ">=3.0.0",
+    "@capacitor/core": ">=3.0.0",
+    "@capacitor/ios": ">=3.0.0",
     "@ionic/prettier-config": "^1.0.0",
     "@ionic/swiftlint-config": "^1.0.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
-    "@types/node": "18.15.3",
-    "@typescript-eslint/eslint-plugin": "5.57.1",
-    "@typescript-eslint/parser": "5.57.1",
-    "eslint": "8.37.0",
     "prettier": "^2.0.5",
     "prettier-plugin-java": "^2.0.0",
     "rimraf": "^4.1.2",
     "rollup": "^2.79.1",
     "swiftlint": "^1.0.1",
-    "typescript": "4.9.5"
+    "typescript": "~3.8.3",
+    "eslint": "^7.32.0"
   },
   "peerDependencies": {
-    "@capacitor/core": "^5.0.0"
+    "@capacitor/core": ">=2.0.0"
   },
   "files": [
     "dist/",
@@ -57,5 +54,8 @@
     }
   },
   "prettier": "@ionic/prettier-config",
-  "swiftlint": "@ionic/swiftlint-config"
+  "swiftlint": "@ionic/swiftlint-config",
+  "dependencies": {
+    "@capacitor/cli": "^4.3.0"
+  }
 }

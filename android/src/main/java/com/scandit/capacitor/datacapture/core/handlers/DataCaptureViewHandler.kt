@@ -10,34 +10,41 @@ import android.app.Activity
 import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
+import com.scandit.capacitor.datacapture.core.testing.OpenForTesting
 import com.scandit.capacitor.datacapture.core.utils.pxFromDp
 import com.scandit.capacitor.datacapture.core.utils.removeFromParent
+import com.scandit.capacitor.datacapture.core.workers.Worker
 import com.scandit.datacapture.core.ui.DataCaptureView
-import com.scandit.datacapture.frameworks.core.utils.MainThread
+import com.scandit.datacapture.core.ui.DataCaptureViewListener
 import java.lang.ref.WeakReference
 
-class DataCaptureViewHandler {
+@OpenForTesting
+class DataCaptureViewHandler(
+    private val viewListener: DataCaptureViewListener,
+    private val uiWorker: Worker
+) {
     private var latestInfo: ResizeAndMoveInfo = ResizeAndMoveInfo(0, 0, 0, 0, false)
     private var isVisible: Boolean = false
-    private var dataCaptureViewReference: WeakReference<DataCaptureView?> = WeakReference(null)
-    private var webViewReference: WeakReference<View?> = WeakReference(null)
+    private var dataCaptureViewReference: WeakReference<DataCaptureView>? = null
+    private var webViewReference: WeakReference<View>? = null
 
+    val dataCaptureView: DataCaptureView?
+        get() = dataCaptureViewReference?.get()
     private val webView: View?
-        get() = webViewReference.get()
+        get() = webViewReference?.get()
 
-    fun attachDataCaptureView(dataCaptureView: DataCaptureView, activity: AppCompatActivity) {
-        if (this.dataCaptureViewReference.get() != dataCaptureView) {
+    fun attachDataCaptureView(dataCaptureView: DataCaptureView, activity: Activity) {
+        if (this.dataCaptureView != dataCaptureView) {
             disposeCurrentDataCaptureView()
             addDataCaptureView(dataCaptureView, activity)
         }
     }
 
-    fun attachWebView(webView: View, @Suppress("UNUSED_PARAMETER") activity: AppCompatActivity) {
+    fun attachWebView(webView: View, @Suppress("UNUSED_PARAMETER") activity: Activity) {
         if (this.webView != webView) {
             webViewReference = WeakReference(webView)
-            MainThread.runOnMainThread {
+            uiWorker.post {
                 webView.bringToFront()
                 webView.setBackgroundColor(Color.TRANSPARENT)
             }
@@ -66,18 +73,19 @@ class DataCaptureViewHandler {
     }
 
     private fun disposeCurrentDataCaptureView() {
-        val dataCaptureView = dataCaptureViewReference.get() ?: return
+        val dataCaptureView = dataCaptureView ?: return
         removeDataCaptureView(dataCaptureView)
     }
 
     private fun disposeCurrentWebView() {
-        webViewReference = WeakReference(null)
+        webViewReference = null
     }
 
     private fun addDataCaptureView(dataCaptureView: DataCaptureView, activity: Activity) {
         dataCaptureViewReference = WeakReference(dataCaptureView)
+        dataCaptureView.addListener(viewListener)
 
-        MainThread.runOnMainThread {
+        uiWorker.post {
             activity.addContentView(
                 dataCaptureView,
                 ViewGroup.LayoutParams(
@@ -90,12 +98,14 @@ class DataCaptureViewHandler {
     }
 
     private fun removeDataCaptureView(dataCaptureView: DataCaptureView) {
-        dataCaptureViewReference = WeakReference(null)
-        removeView(dataCaptureView)
+        dataCaptureViewReference = null
+        removeView(dataCaptureView) {
+            dataCaptureView.removeListener(viewListener)
+        }
     }
 
     private fun removeView(view: View, uiBlock: (() -> Unit)? = null) {
-        MainThread.runOnMainThread {
+        uiWorker.post {
             view.removeFromParent()
             uiBlock?.invoke()
         }
@@ -103,7 +113,7 @@ class DataCaptureViewHandler {
 
     // Update the view visibility, position and size.
     private fun render() {
-        val view = dataCaptureViewReference.get() ?: return
+        val view = dataCaptureView ?: return
         renderNoAnimate(view)
     }
 
@@ -118,10 +128,10 @@ class DataCaptureViewHandler {
             }
             if (latestInfo.shouldBeUnderWebView) {
                 webView?.bringToFront()
-                (webView?.parent as? View)?.translationZ = 1F
+                (webView?.parent as View).translationZ = 1F
             } else {
                 dataCaptureView.bringToFront()
-                (webView?.parent as? View)?.translationZ = -1F
+                (webView?.parent as View).translationZ = -1F
             }
             dataCaptureView.requestLayout()
         }

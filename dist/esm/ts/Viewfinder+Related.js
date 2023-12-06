@@ -22,6 +22,11 @@ export var LaserlineViewfinderStyle;
     LaserlineViewfinderStyle["Animated"] = "animated";
 })(LaserlineViewfinderStyle || (LaserlineViewfinderStyle = {}));
 export class RectangularViewfinderAnimation extends DefaultSerializeable {
+    constructor(isLooping) {
+        super();
+        this._isLooping = false;
+        this._isLooping = isLooping;
+    }
     static fromJSON(json) {
         if (json === null) {
             return null;
@@ -30,11 +35,6 @@ export class RectangularViewfinderAnimation extends DefaultSerializeable {
     }
     get isLooping() {
         return this._isLooping;
-    }
-    constructor(isLooping) {
-        super();
-        this._isLooping = false;
-        this._isLooping = isLooping;
     }
 }
 __decorate([

@@ -127,6 +127,31 @@ export class HTMLElementState {
     }
 }
 export class DataCaptureView extends DefaultSerializeable {
+    constructor() {
+        super();
+        this._context = null;
+        this.scanAreaMargins = Capacitor.defaults.DataCaptureView.scanAreaMargins;
+        this.pointOfInterest = Capacitor.defaults.DataCaptureView.pointOfInterest;
+        this.logoAnchor = Capacitor.defaults.DataCaptureView.logoAnchor;
+        this.logoOffset = Capacitor.defaults.DataCaptureView.logoOffset;
+        this.focusGesture = Capacitor.defaults.DataCaptureView.focusGesture;
+        this.zoomGesture = Capacitor.defaults.DataCaptureView.zoomGesture;
+        this.logoStyle = Capacitor.defaults.DataCaptureView.logoStyle;
+        this.overlays = [];
+        this.controls = [];
+        this.listeners = [];
+        this.htmlElement = null;
+        this._htmlElementState = new HTMLElementState();
+        this.scrollListener = this.elementDidChange.bind(this);
+        this.domObserver = new MutationObserver(this.elementDidChange.bind(this));
+        this.orientationChangeListener = (() => {
+            this.elementDidChange();
+            // SDC-1784 -> workaround because at the moment of this callback the element doesn't have the updated size.
+            setTimeout(this.elementDidChange.bind(this), 100);
+            setTimeout(this.elementDidChange.bind(this), 300);
+            setTimeout(this.elementDidChange.bind(this), 1000);
+        });
+    }
     get context() {
         return this._context;
     }
@@ -167,37 +192,10 @@ export class DataCaptureView extends DefaultSerializeable {
     get privateContext() {
         return this.context;
     }
-    // eslint-disable-next-line @typescript-eslint/member-ordering
     static forContext(context) {
         const view = new DataCaptureView();
         view.context = context;
         return view;
-    }
-    // eslint-disable-next-line @typescript-eslint/member-ordering
-    constructor() {
-        super();
-        this._context = null;
-        this.scanAreaMargins = Capacitor.defaults.DataCaptureView.scanAreaMargins;
-        this.pointOfInterest = Capacitor.defaults.DataCaptureView.pointOfInterest;
-        this.logoAnchor = Capacitor.defaults.DataCaptureView.logoAnchor;
-        this.logoOffset = Capacitor.defaults.DataCaptureView.logoOffset;
-        this.focusGesture = Capacitor.defaults.DataCaptureView.focusGesture;
-        this.zoomGesture = Capacitor.defaults.DataCaptureView.zoomGesture;
-        this.logoStyle = Capacitor.defaults.DataCaptureView.logoStyle;
-        this.overlays = [];
-        this.controls = [];
-        this.listeners = [];
-        this.htmlElement = null;
-        this._htmlElementState = new HTMLElementState();
-        this.scrollListener = this.elementDidChange.bind(this);
-        this.domObserver = new MutationObserver(this.elementDidChange.bind(this));
-        this.orientationChangeListener = (() => {
-            this.elementDidChange();
-            // SDC-1784 -> workaround because at the moment of this callback the element doesn't have the updated size.
-            setTimeout(this.elementDidChange.bind(this), 100);
-            setTimeout(this.elementDidChange.bind(this), 300);
-            setTimeout(this.elementDidChange.bind(this), 1000);
-        });
     }
     connectToElement(element) {
         this.htmlElement = element;

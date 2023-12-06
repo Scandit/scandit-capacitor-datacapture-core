@@ -9,13 +9,12 @@
 
 // Define the plugin using the CAP_PLUGIN Macro, and
 // each method the plugin supports using the CAP_PLUGIN_METHOD macro.
-CAP_PLUGIN(ScanditCapacitorCore, "ScanditCaptureCoreNative",
+CAP_PLUGIN(ScanditCaptureCore, "ScanditCaptureCoreNative",
            CAP_PLUGIN_METHOD(contextFromJSON, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(updateContextFromJSON, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeContextListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeContextFrameListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeViewListener, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(unsubscribeViewListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeVolumeButtonObserver, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(unsubscribeVolumeButtonObserver, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(disposeContext, CAPPluginReturnPromise);

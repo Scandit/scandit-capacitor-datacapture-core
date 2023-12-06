@@ -5,7 +5,6 @@
  */
 
 import Foundation
-import Capacitor
 
 public extension NSDictionary {
     var jsonString: String {
@@ -15,14 +14,5 @@ public extension NSDictionary {
         }
 
         return String(data: theJSONData, encoding: .utf8) ?? ""
-    }
-}
-
-public extension Dictionary {
-    var jsonString: String? {
-        guard let data = try? JSONSerialization.data(withJSONObject: self, options: []) else {
-            return nil
-        }
-        return String(data: data, encoding: .utf8)
     }
 }
