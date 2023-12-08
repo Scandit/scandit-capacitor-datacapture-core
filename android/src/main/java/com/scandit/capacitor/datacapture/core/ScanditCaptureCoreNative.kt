@@ -7,44 +7,24 @@ import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
 import com.scandit.capacitor.datacapture.core.communication.CameraPermissionGrantedListener
-import com.scandit.capacitor.datacapture.core.communication.ComponentDeserializersProvider
-import com.scandit.capacitor.datacapture.core.communication.ModeDeserializersProvider
 import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
-import com.scandit.capacitor.datacapture.core.data.SerializablePoint
-import com.scandit.capacitor.datacapture.core.data.SerializableViewState
 import com.scandit.capacitor.datacapture.core.data.defaults.*
-import com.scandit.capacitor.datacapture.core.deserializers.Deserializers
-import com.scandit.capacitor.datacapture.core.deserializers.DeserializersProvider
 import com.scandit.capacitor.datacapture.core.errors.*
-import com.scandit.capacitor.datacapture.core.handlers.DataCaptureComponentsHandler
-import com.scandit.capacitor.datacapture.core.handlers.DataCaptureContextHandler
 import com.scandit.capacitor.datacapture.core.handlers.DataCaptureViewHandler
-import com.scandit.capacitor.datacapture.core.utils.dpFromPx
-import com.scandit.capacitor.datacapture.core.utils.hexString
-import com.scandit.capacitor.datacapture.core.workers.UiWorker
-import com.scandit.datacapture.core.capture.DataCaptureContext
-import com.scandit.datacapture.core.capture.DataCaptureContextListener
-import com.scandit.datacapture.core.capture.serialization.DataCaptureModeDeserializer
-import com.scandit.datacapture.core.common.ContextStatus
-import com.scandit.datacapture.core.common.feedback.Feedback
-import com.scandit.datacapture.core.common.geometry.QuadrilateralDeserializer
-import com.scandit.datacapture.core.common.geometry.toJson
-import com.scandit.datacapture.core.component.serialization.DataCaptureComponentDeserializer
-import com.scandit.datacapture.core.data.FrameData
-import com.scandit.datacapture.core.data.toJson
-import com.scandit.datacapture.core.json.JsonValue
+import com.scandit.capacitor.datacapture.core.utils.CapacitorResult
 import com.scandit.datacapture.core.source.*
-import com.scandit.datacapture.core.source.serialization.FrameSourceDeserializer
-import com.scandit.datacapture.core.source.serialization.FrameSourceDeserializerListener
 import com.scandit.datacapture.core.ui.DataCaptureView
-import com.scandit.datacapture.core.ui.DataCaptureViewListener
-import com.scandit.datacapture.core.ui.style.Brush
-import com.scandit.datacapture.core.ui.viewfinder.AimerViewfinder
-import com.scandit.datacapture.core.ui.viewfinder.LaserlineViewfinder
-import com.scandit.datacapture.core.ui.viewfinder.LaserlineViewfinderStyle
-import com.scandit.datacapture.core.ui.viewfinder.RectangularViewfinder
-import com.scandit.datacapture.core.ui.viewfinder.RectangularViewfinderStyle
-import org.json.JSONArray
+import com.scandit.datacapture.frameworks.core.CoreModule
+import com.scandit.datacapture.frameworks.core.deserialization.DeserializationLifecycleObserver
+import com.scandit.datacapture.frameworks.core.events.Emitter
+import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureContextListener
+import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
+import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
+import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceListener
+import com.scandit.datacapture.frameworks.core.utils.DefaultLastFrameData
+import com.scandit.datacapture.frameworks.core.utils.DefaultMainThread
+import com.scandit.datacapture.frameworks.core.utils.LastFrameData
+import com.scandit.datacapture.frameworks.core.utils.MainThread
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -56,16 +36,10 @@ import org.json.JSONObject
 )
 class ScanditCaptureCoreNative :
     Plugin(),
-    CoreActions,
-    DeserializersProvider,
-    DataCaptureContextListener,
-    DataCaptureViewListener,
-    FrameSourceDeserializerListener {
+    DeserializationLifecycleObserver.Observer,
+    Emitter {
 
     companion object {
-        private const val ACTION_STATUS_CHANGED = "didChangeStatus"
-        private const val ACTION_CONTEXT_OBSERVATION_STARTED = "didStartObservingContext"
-        private const val ACTION_VIEW_SIZE_CHANGED = "didChangeSizeOrientation"
         private const val EMPTY_STRING_ERROR = "Empty strings are not allowed."
 
         private val SCANDIT_PLUGINS = listOf(
@@ -74,47 +48,24 @@ class ScanditCaptureCoreNative :
             "ScanditIdNative",
             "ScanditTextNative"
         )
-
-        var lastFrame: FrameData? = null
     }
 
-    private val uiWorker = UiWorker()
-
-    private val captureContextHandler = DataCaptureContextHandler(this)
-    private val captureComponentsHandler = DataCaptureComponentsHandler()
-    private val captureViewHandler = DataCaptureViewHandler(this, uiWorker)
+    private val captureViewHandler = DataCaptureViewHandler()
+    private val frameSourceListener = FrameworksFrameSourceListener(this)
+    private val coreModule = CoreModule(
+        frameSourceListener,
+        FrameworksDataCaptureContextListener(this),
+        FrameworksDataCaptureViewListener(this),
+        FrameworksFrameSourceDeserializer(frameSourceListener)
+    )
+    private val mainThread: MainThread = DefaultMainThread.getInstance()
+    private val lastFrameData: LastFrameData = DefaultLastFrameData.getInstance()
 
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
-    private var latestFeedback: Feedback? = null
-
     private val plugins = mutableListOf<Plugin>()
-
-    override val deserializers: Deserializers by lazy {
-        Deserializers(
-            bridge.context,
-            retrieveAllModeDeserializers(),
-            retrieveAllComponentDeserializers(),
-            this
-        )
-    }
-
     fun registerPluginInstance(instance: Plugin) {
         plugins.add(instance)
-    }
-
-    override fun handleOnStart() {
-        super.handleOnStart()
-        if (checkCameraPermission()) {
-            captureContextHandler.camera?.switchToDesiredState(lastFrameSourceState)
-        }
-    }
-
-    override fun handleOnStop() {
-        super.handleOnStop()
-        lastFrameSourceState = captureContextHandler.camera?.desiredState ?: FrameSourceState.OFF
-        captureContextHandler.camera?.switchToDesiredState(FrameSourceState.OFF)
-        latestFeedback?.release()
     }
 
     override fun load() {
@@ -137,19 +88,34 @@ class ScanditCaptureCoreNative :
         }
 
         captureViewHandler.attachWebView(bridge.webView, bridge.activity)
+        coreModule.onCreate(this.context)
+        DeserializationLifecycleObserver.attach(this)
     }
 
-    private fun retrieveAllModeDeserializers(): List<DataCaptureModeDeserializer> =
-        plugins
-            .filterIsInstance(ModeDeserializersProvider::class.java)
-            .map { it.provideModeDeserializers() }
-            .flatten()
+    override fun handleOnStart() {
+        if (checkCameraPermission()) {
+            coreModule.switchToDesiredCameraState(lastFrameSourceState)
+        }
+        coreModule.registerDataCaptureContextListener()
+        coreModule.registerDataCaptureViewListener()
+        coreModule.registerFrameSourceListener()
+    }
 
-    private fun retrieveAllComponentDeserializers(): List<DataCaptureComponentDeserializer> =
-        plugins
-            .filterIsInstance(ComponentDeserializersProvider::class.java)
-            .map { it.provideComponentDeserializers() }
-            .flatten()
+    override fun handleOnStop() {
+        lastFrameSourceState = coreModule.getCurrentCameraDesiredState() ?: FrameSourceState.OFF
+        coreModule.switchToDesiredCameraState(FrameSourceState.OFF)
+        coreModule.unregisterDataCaptureContextListener()
+        coreModule.unregisterDataCaptureViewListener()
+        coreModule.unregisterFrameSourceListener()
+    }
+
+    override fun handleOnDestroy() {
+        DeserializationLifecycleObserver.detach(this)
+        coreModule.onDestroy()
+    }
+
+    override fun onDataCaptureViewDeserialized(dataCaptureView: DataCaptureView) =
+        captureViewHandler.attachDataCaptureView(dataCaptureView, this.activity)
 
     private fun checkCameraPermission(): Boolean =
         getPermissionState("camera") == PermissionState.GRANTED
@@ -158,7 +124,7 @@ class ScanditCaptureCoreNative :
         if (getPermissionState("camera") != PermissionState.GRANTED) {
             requestPermissionForAlias("camera", call, "initialCameraPermsCallback")
         } else {
-            initializeContextFromJson(call)
+            updateContext(call)
         }
     }
 
@@ -176,7 +142,7 @@ class ScanditCaptureCoreNative :
         if (getPermissionState("camera") == PermissionState.GRANTED) {
             notifyCameraPermissionGrantedToPlugins()
         }
-        initializeContextFromJson(call)
+        updateContext(call)
     }
 
     @Suppress("unused")
@@ -188,196 +154,66 @@ class ScanditCaptureCoreNative :
         updateContext(call)
     }
 
-    private fun notifyCameraPermissionGrantedToPlugins() {
+    private fun notifyCameraPermissionGrantedToPlugins() =
         plugins.filterIsInstance(CameraPermissionGrantedListener::class.java).forEach {
             it.onCameraPermissionGranted()
         }
-    }
-
-    //region FrameSourceDeserializerListener
-    override fun onFrameSourceDeserializationFinished(
-        deserializer: FrameSourceDeserializer,
-        frameSource: FrameSource,
-        json: JsonValue
-    ) {
-        (frameSource as? Camera)?.apply {
-            if (json.contains("desiredTorchState")) {
-                desiredTorchState = TorchStateDeserializer.fromJson(
-                    json.requireByKeyAsString("desiredTorchState")
-                )
-            }
-
-            if (json.contains("desiredState")) {
-                switchToDesiredState(
-                    FrameSourceStateDeserializer.fromJson(
-                        json.requireByKeyAsString("desiredState")
-                    )
-                )
-            }
-        }
-    }
-    //endregion
-
-    //region DataCaptureContextListener
-    override fun onStatusChanged(
-        dataCaptureContext: DataCaptureContext,
-        contextStatus: ContextStatus
-    ) {
-        val ev = JSObject()
-        ev.put("name", ACTION_STATUS_CHANGED)
-        ev.put("argument", contextStatus)
-        notifyListeners(ACTION_STATUS_CHANGED, ev)
-    }
-
-    override fun onObservationStarted(dataCaptureContext: DataCaptureContext) {
-        val ev = JSObject()
-        ev.put("name", ACTION_CONTEXT_OBSERVATION_STARTED)
-        ev.put("argument", dataCaptureContext)
-        notifyListeners(ACTION_CONTEXT_OBSERVATION_STARTED, ev)
-    }
-    //endregion
-
-    //region DataCaptureViewListener
-    override fun onSizeChanged(width: Int, height: Int, screenRotation: Int) {
-        val ev = JSObject()
-        ev.put("name", ACTION_VIEW_SIZE_CHANGED)
-        ev.put(
-            "argument",
-            JSONArray().apply {
-                put(
-                    SerializableViewState(width, height, screenRotation).toJson()
-                )
-            }
-        )
-    }
-    //endregion
 
     //region CameraProxy
     @PluginMethod
-    override fun getCurrentCameraState(call: PluginCall) {
-        captureContextHandler.camera?.let {
-            call.resolve(JSObject(it.currentState.toJson()))
-        } ?: kotlin.run {
-            call.reject(NoCameraAvailableError().serializeContent().toString())
-        }
+    fun getCurrentCameraState(call: PluginCall) =
+        coreModule.getCurrentCameraState(CapacitorResult(call))
+
+    @PluginMethod
+    fun getIsTorchAvailable(call: PluginCall) {
+        val positionJson = call.data.getString("position") ?: return
+        coreModule.isTorchAvailable(positionJson, CapacitorResult(call))
     }
 
     @PluginMethod
-    override fun getIsTorchAvailable(call: PluginCall) {
-        captureContextHandler.camera?.let {
-            val positionJson = call.data.getString("position") ?: return
+    fun registerListenerForCameraEvents(call: PluginCall) {
+        coreModule.registerFrameSourceListener()
+        call.resolve()
+    }
 
-            val cameraPosition = try {
-                CameraPositionDeserializer.fromJson(positionJson)
-            } catch (e: Exception) {
-                println(e)
-                call.reject(
-                    CameraPositionDeserializationError("GetIsTorchAvailable")
-                        .serializeContent()
-                        .toString()
-                )
-                return
-            }
-
-            if (cameraPosition != it.position) {
-                call.reject(
-                    NoCameraWithPositionError(cameraPosition.toString())
-                        .serializeContent()
-                        .toString()
-                )
-                return
-            }
-
-            call.resolve(JSObject(it.isTorchAvailable.toString()))
-        } ?: kotlin.run {
-            call.reject(NoCameraAvailableError().serializeContent().toString())
-        }
+    @PluginMethod
+    fun unregisterListenerForCameraEvents(call: PluginCall) {
+        coreModule.unregisterFrameSourceListener()
+        call.resolve()
     }
     //endregion
 
     //region DataCaptureContextProxy
     @PluginMethod
-    override fun contextFromJSON(call: PluginCall) {
+    fun contextFromJSON(call: PluginCall) {
+        initializeContextFromJson(call)
         checkOrRequestInitialCameraPermission(call)
     }
 
     private fun initializeContextFromJson(call: PluginCall) {
-        try {
-            val jsonString = call.data.getString("context")
-                ?: return call.reject(EMPTY_STRING_ERROR)
-            val deserializationResult = deserializers.dataCaptureContextDeserializer
-                .contextFromJson(jsonString)
-            val view = deserializationResult.view
-            val dataCaptureContext = deserializationResult.dataCaptureContext
-            val dataCaptureComponents = deserializationResult.components
+        val jsonString = call.data.getString("context")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.createContextFromJson(jsonString, CapacitorResult(call))
+    }
 
-            captureContextHandler.attachDataCaptureContext(dataCaptureContext)
-            captureViewHandler.attachDataCaptureView(view!!, bridge.activity)
-            captureComponentsHandler.attachDataCaptureComponents(dataCaptureComponents)
-            call.resolve()
-        } catch (e: JSONException) {
-            call.reject(JsonParseError(e.message).toString())
-        } catch (e: RuntimeException) { // TODO SDC-1851 fine-catch deserializer exceptions
-            call.reject(JsonParseError(e.message).toString())
-        } catch (e: Exception) {
-            call.reject(ContextDeserializationError(e.message).toString())
+    @PluginMethod
+    fun disposeContext(call: PluginCall) {
+        coreModule.disposeContext()
+        removeAllListeners(call)
+        plugins.forEach {
+            it.removeAllListeners(call)
         }
     }
 
     @PluginMethod
-    override fun disposeContext(call: PluginCall) {
-        captureContextHandler.disposeCurrent()
-        captureComponentsHandler.disposeCurrent()
-        captureViewHandler.disposeCurrent()
-        call.resolve()
-    }
-
-    @PluginMethod
-    override fun updateContextFromJSON(call: PluginCall) {
-        checkOrRequestUpdateCameraPermission(call)
-    }
+    fun updateContextFromJSON(call: PluginCall) = checkOrRequestUpdateCameraPermission(call)
 
     private fun updateContext(call: PluginCall) {
-        try {
-            if (captureContextHandler.dataCaptureContext == null) {
-                captureContextHandler.attachDataCaptureContext(
-                    captureContextHandler.dataCaptureContext!!
-                )
-                captureViewHandler.attachDataCaptureView(
-                    captureViewHandler.dataCaptureView!!, bridge.activity
-                )
-                captureComponentsHandler.attachDataCaptureComponents(
-                    captureComponentsHandler.dataCaptureComponents
-                )
-                call.resolve()
-            } else {
-                val jsonString = call.data.getString("context")
-                    ?: return call.reject(EMPTY_STRING_ERROR)
-                uiWorker.post {
-                    val deserializationResult =
-                        deserializers.dataCaptureContextDeserializer.updateContextFromJson(
-                            captureContextHandler.dataCaptureContext!!,
-                            captureViewHandler.dataCaptureView,
-                            captureComponentsHandler.dataCaptureComponents,
-                            jsonString
-                        )
-                    val view = deserializationResult.view
-                    val dataCaptureContext = deserializationResult.dataCaptureContext
-                    val dataCaptureComponents = deserializationResult.components
+        val jsonString = call.data.getString("context")
+            ?: return call.reject(EMPTY_STRING_ERROR)
 
-                    captureContextHandler.attachDataCaptureContext(dataCaptureContext)
-                    captureViewHandler.attachDataCaptureView(view!!, bridge.activity)
-                    captureComponentsHandler.attachDataCaptureComponents(dataCaptureComponents)
-
-                    call.resolve()
-                }
-            }
-        } catch (e: JSONException) {
-            call.reject(JsonParseError(e.message).toString())
-        } catch (e: RuntimeException) { // TODO SDC-1851 fine-catch deserializer exceptions
-            call.reject(JsonParseError(e.message).toString())
-        } catch (e: Exception) {
-            call.reject(ContextDeserializationError(e.message).toString())
+        mainThread.runOnMainThread {
+            coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
         }
     }
 
@@ -385,7 +221,7 @@ class ScanditCaptureCoreNative :
 
     //region DataCaptureViewProxy
     @PluginMethod
-    override fun setViewPositionAndSize(call: PluginCall) {
+    fun setViewPositionAndSize(call: PluginCall) {
         try {
             val positionJson = call.data.getString("position")
                 ?: return call.reject(EMPTY_STRING_ERROR)
@@ -398,178 +234,97 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    override fun showView(call: PluginCall) {
+    fun showView(call: PluginCall) {
         captureViewHandler.setVisible()
         call.resolve()
     }
 
     @PluginMethod
-    override fun hideView(call: PluginCall) {
+    fun hideView(call: PluginCall) {
         captureViewHandler.setInvisible()
         call.resolve()
     }
 
     @PluginMethod
-    override fun viewPointForFramePoint(call: PluginCall) {
-        try {
-            if (captureViewHandler.dataCaptureView == null) {
-                call.reject(NoViewToConvertPointError().serializeContent().toString())
-            } else {
-                val pointJson = call.data.getString("point")
-                    ?: return call.reject(EMPTY_STRING_ERROR)
-                val point = SerializablePoint(
-                    JSONObject(pointJson)
-                ).toScanditPoint()
-                val mappedPoint = captureViewHandler.dataCaptureView!!
-                    .mapFramePointToView(point)
-                    .dpFromPx()
-                call.resolve(JSObject(mappedPoint.toJson()))
-            }
-        } catch (e: Exception) { // TODO SDC-1851 fine-catch deserializer exceptions
-            call.reject(JsonParseError(e.message).toString())
-        }
+    fun viewPointForFramePoint(call: PluginCall) {
+        val pointJson = call.data.getString("point")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+
+        coreModule.viewPointForFramePoint(pointJson, CapacitorResult(call))
     }
 
     @PluginMethod
-    override fun viewQuadrilateralForFrameQuadrilateral(call: PluginCall) {
-        try {
-            if (captureViewHandler.dataCaptureView == null) {
-                call.reject(NoViewToConvertQuadrilateralError().serializeContent().toString())
-            } else {
-                val pointJson = call.data.getString("point")
-                    ?: return call.reject(EMPTY_STRING_ERROR)
-                val quadrilateral = QuadrilateralDeserializer.fromJson(pointJson)
-                val mappedQuadrilateral = captureViewHandler.dataCaptureView!!
-                    .mapFrameQuadrilateralToView(quadrilateral)
-                    .dpFromPx()
-                call.resolve(JSObject(mappedQuadrilateral.toJson()))
-            }
-        } catch (e: Exception) { // TODO SDC-1851 fine-catch deserializer exceptions
-            call.reject(JsonParseError(e.message).toString())
-        }
+    fun viewQuadrilateralForFrameQuadrilateral(call: PluginCall) {
+        val pointJson = call.data.getString("point")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+
+        coreModule.viewQuadrilateralForFrameQuadrilateral(pointJson, CapacitorResult(call))
     }
     //endregion
 
     //region Feedback
     @PluginMethod
-    override fun emitFeedback(call: PluginCall) {
-        try {
-            val jsonObject = call.data.getString("feedback")
-            val feedback = Feedback.fromJson(jsonObject.toString())
-
-            latestFeedback?.release()
-            feedback.emit()
-            latestFeedback = feedback
-
-            call.resolve()
-        } catch (e: JSONException) {
-            call.reject(JsonParseError(e.message).toString())
-        } catch (e: RuntimeException) { // TODO [SDC-1851] - fine-catch deserializer exceptions
-            call.reject(JsonParseError(e.message).toString())
+    fun emitFeedback(call: PluginCall) {
+        call.data.getString("feedback")?.let {
+            coreModule.emitFeedback(it, CapacitorResult(call))
         }
     }
     //endregion
 
     @PluginMethod
-    override fun getDefaults(call: PluginCall) {
-        try {
-            val cameraSettings = CameraSettings()
-            val dataCaptureView = DataCaptureView.newInstance(context, null)
-            val laserViewfinder = LaserlineViewfinder(LaserlineViewfinderStyle.LEGACY)
-            val rectangularViewfinder = RectangularViewfinder(RectangularViewfinderStyle.LEGACY)
-            val aimerViewfinder = AimerViewfinder()
-            val brush = Brush.transparent()
-            val availableCameraPositions = listOfNotNull(
-                Camera.getCamera(CameraPosition.USER_FACING)?.position,
-                Camera.getCamera(CameraPosition.WORLD_FACING)?.position
-            )
-            val defaults = SerializableCoreDefaults(
-                cameraDefaults = SerializableCameraDefaults(
-                    cameraSettingsDefault = SerializableCameraSettingsDefault(
-                        settings = cameraSettings
-                    ),
-                    availablePositions = JSONArray(
-                        availableCameraPositions.map { it.toJson() }
-                    ),
-                    defaultPosition = Camera.getDefaultCamera()?.position?.toJson()
-                ),
-                dataCaptureViewDefaults = SerializableDataCaptureViewDefaults(
-                    scanAreaMargins = dataCaptureView.scanAreaMargins.toJson(),
-                    pointOfInterest = dataCaptureView.pointOfInterest.toJson(),
-                    logoAnchor = dataCaptureView.logoAnchor.toJson(),
-                    logoOffset = dataCaptureView.logoOffset.toJson(),
-                    focusGesture = dataCaptureView.focusGesture?.toJson(),
-                    zoomGesture = dataCaptureView.zoomGesture?.toJson(),
-                    logoStyle = dataCaptureView.logoStyle.toString()
-                ),
-                laserlineViewfinderDefaults = SerializableLaserlineViewfinderDefaults(
-                    viewFinder = laserViewfinder
-                ),
-                rectangularViewfinderDefaults = SerializableRectangularViewfinderDefaults(
-                    viewFinder = rectangularViewfinder
-                ),
-                aimerViewfinderDefaults = SerializableAimerViewfinderDefaults(
-                    frameColor = aimerViewfinder.frameColor.hexString,
-                    dotColor = aimerViewfinder.dotColor.hexString
-                ),
-                brushDefaults = SerializableBrushDefaults(
-                    brush = brush
-                )
-            )
-            call.resolve(JSObject.fromJSONObject(defaults.toJson()))
-        } catch (e: JSONException) {
-            call.reject(JsonParseError(e.message).toString())
-        }
+    fun getDefaults(call: PluginCall) {
+        val defaults = coreModule.getDefaults()
+        call.resolve(JSObject.fromJSONObject(JSONObject(defaults)))
     }
 
     @PluginMethod
-    override fun subscribeContextListener(call: PluginCall) {
+    fun subscribeContextListener(call: PluginCall) {
+        coreModule.registerDataCaptureContextListener()
         call.resolve()
     }
 
     @PluginMethod
-    override fun subscribeViewListener(call: PluginCall) {
+    fun subscribeViewListener(call: PluginCall) {
+        coreModule.registerDataCaptureViewListener()
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun unsubscribeViewListener(call: PluginCall) {
+        coreModule.unregisterDataCaptureViewListener()
         call.resolve()
     }
 
     @PluginMethod
     fun getLastFrame(call: PluginCall) {
-        val lastFrame = ScanditCaptureCoreNative.lastFrame
-
-        if (lastFrame == null) {
-            call.reject(NullFrameError().serializeContent().toString())
-            return
+        lastFrameData.getLastFrameDataJson {
+            if (it == null) {
+                call.reject(NullFrameError().serializeContent().toString())
+                return@getLastFrameDataJson
+            }
+            CapacitorResult(call).success(it)
         }
-
-        call.resolve(JSObject(ScanditCaptureCoreNative.lastFrame?.toJson()))
     }
 
     @PluginMethod
     fun getLastFrameOrNull(call: PluginCall) {
-        call.resolve(JSObject(ScanditCaptureCoreNative.lastFrame?.toJson()))
+        lastFrameData.getLastFrameDataJson {
+            CapacitorResult(call).success(it)
+        }
     }
 
+    @PluginMethod
+    fun subscribeVolumeButtonObserver(call: PluginCall) = call.resolve()
+
+    @PluginMethod
+    fun unsubscribeVolumeButtonObserver(call: PluginCall) = call.resolve()
+
     //endregion
-}
 
-interface CoreActions {
-    fun getCurrentCameraState(call: PluginCall)
-    fun getIsTorchAvailable(call: PluginCall)
+    override fun emit(eventName: String, payload: MutableMap<String, Any?>) {
+        payload["name"] = eventName
+        notifyListeners(eventName, JSObject.fromJSONObject(JSONObject(payload)))
+    }
 
-    fun contextFromJSON(call: PluginCall)
-    fun disposeContext(call: PluginCall)
-    fun updateContextFromJSON(call: PluginCall)
-
-    fun setViewPositionAndSize(call: PluginCall)
-    fun showView(call: PluginCall)
-    fun hideView(call: PluginCall)
-    fun viewPointForFramePoint(call: PluginCall)
-    fun viewQuadrilateralForFrameQuadrilateral(call: PluginCall)
-
-    fun emitFeedback(call: PluginCall)
-
-    fun getDefaults(call: PluginCall)
-
-    fun subscribeContextListener(call: PluginCall)
-    fun subscribeViewListener(call: PluginCall)
+    override fun hasListenersForEvent(eventName: String): Boolean = this.hasListeners(eventName)
 }

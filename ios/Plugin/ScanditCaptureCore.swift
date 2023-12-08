@@ -9,20 +9,30 @@ import Foundation
 import Capacitor
 
 import ScanditCaptureCore
+import ScanditFrameworksCore
 
-public protocol DataCapturePlugin where Self: CAPPlugin {
-    var modeDeserializers: [DataCaptureModeDeserializer] { get }
-    var componentDeserializers: [DataCaptureComponentDeserializer] { get }
-    var components: [DataCaptureComponent] { get }
+public protocol ContextChangeListener: AnyObject {
+    func context(didChange context: DataCaptureContext?)
 }
 
-@objc(ScanditCaptureCore)
+@objc(ScanditCapacitorCore)
 // swiftlint:disable:next type_body_length
-public class ScanditCaptureCore: CAPPlugin {
+public class ScanditCapacitorCore: CAPPlugin {
 
-    public static var dataCapturePlugins = [DataCapturePlugin]()
+    private var coreModule: CoreModule!
 
-    public var context: DataCaptureContext?
+    public var context: DataCaptureContext? {
+        didSet {
+            Self.context = context
+            os_unfair_lock_lock(&Self.contextListenersLock)
+            defer { os_unfair_lock_unlock(&Self.contextListenersLock) }
+            Self.contextListeners.compactMap { $0 as? ContextChangeListener }.forEach {
+                $0.context(didChange: context)
+            }
+        }
+    }
+
+    private static var context: DataCaptureContext?
 
     var captureView: DataCaptureView? {
         didSet {
@@ -37,8 +47,6 @@ public class ScanditCaptureCore: CAPPlugin {
                 return
             }
 
-            captureView.addListener(self)
-
             captureView.isHidden = true
             captureView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -47,113 +55,100 @@ public class ScanditCaptureCore: CAPPlugin {
         }
     }
 
-    public static var lastFrame: FrameData?
+    public static func registerModeDeserializer(_ modeDeserializer: DataCaptureModeDeserializer) {
+        Deserializers.Factory.add(modeDeserializer)
+    }
+
+    public static func unregisterModeDeserializer(_ modeDeserialzer: DataCaptureModeDeserializer) {
+        Deserializers.Factory.remove(modeDeserialzer)
+    }
+
+    public static func registerComponentDeserializer(_ componentDeserializer: DataCaptureComponentDeserializer) {
+        Deserializers.Factory.add(componentDeserializer)
+    }
+
+    public static func unregisterComponentDeserializer(_ componentDeserializer: DataCaptureComponentDeserializer) {
+        Deserializers.Factory.remove(componentDeserializer)
+    }
+
+    private static var contextListenersLock = os_unfair_lock()
+    private static var contextListeners = NSMutableSet()
+
+    public static func registerContextChangeListener(listener: ContextChangeListener) {
+        if Self.contextListeners.contains(listener) {
+            return
+        }
+        Self.contextListeners.add(listener)
+        listener.context(didChange: context)
+    }
+
+    public static func unregisterContextChangeListener(listener: ContextChangeListener) {
+        if Self.contextListeners.contains(listener) {
+            Self.contextListeners.remove(listener)
+        }
+    }
+
+    public static var lastFrame: FrameData? {
+        get {
+            LastFrameData.shared.frameData
+        }
+        set {
+            LastFrameData.shared.frameData = newValue
+        }
+    }
 
     private var volumeButtonObserver: VolumeButtonObserver?
 
     private lazy var captureViewConstraints = DataCaptureViewConstraints(relativeTo: webView!)
 
-    private lazy var viewDeserializer: DataCaptureViewDeserializer = {
-        let deserializer = DataCaptureViewDeserializer(modeDeserializers: modeDeserializers)
-        deserializer.delegate = self
-        return deserializer
-    }()
-
-    private lazy var frameSourceDeserializer: FrameSourceDeserializer = {
-        let deserializer = FrameSourceDeserializer(modeDeserializers: modeDeserializers)
-        deserializer.delegate = self
-        return deserializer
-    }()
-
-    private lazy var modeDeserializers: [DataCaptureModeDeserializer] = {
-        return ScanditCaptureCore.dataCapturePlugins.reduce(into: []) { deserializers, plugin in
-            deserializers.append(contentsOf: plugin.modeDeserializers)
-        }
-    }()
-
-    private lazy var componentDeserializers: [DataCaptureComponentDeserializer] = {
-        return ScanditCaptureCore.dataCapturePlugins.reduce(into: []) { deserializers, plugin in
-            deserializers.append(contentsOf: plugin.componentDeserializers)
-        }
-    }()
-
-    private lazy var components: [DataCaptureComponent] = {
-        return ScanditCaptureCore.dataCapturePlugins.reduce(into: []) { components, plugin in
-            components.append(contentsOf: plugin.components)
-        }
-    }()
-
-    public lazy var deserializer: DataCaptureContextDeserializer = {
-        let deserializer = DataCaptureContextDeserializer(frameSourceDeserializer: self.frameSourceDeserializer,
-                                                          viewDeserializer: viewDeserializer,
-                                                          modeDeserializers: modeDeserializers,
-                                                          componentDeserializers: componentDeserializers)
-        deserializer.avoidThreadDependencies = true
-        return deserializer
-    }()
-
-    public func onReset() {
-        // Remove the data capture view
-        captureView = nil
-
-        // Dispose of the context
-        context?.dispose()
-        context = nil
-
-        volumeButtonObserver = nil
+    public override func load() {
+        super.load()
+        let emitter = CapacitorEventEmitter(with: self)
+        let frameSourceListener = FrameworksFrameSourceListener(eventEmitter: emitter)
+        let framesourceDeserializer = FrameworksFrameSourceDeserializer(
+            frameSourceListener: frameSourceListener,
+            torchListener: frameSourceListener
+        )
+        let contextDeserializer = FrameworksDataCaptureContextListener(eventEmitter: emitter)
+        let viewListener = FrameworksDataCaptureViewListener(eventEmitter: emitter)
+        coreModule = CoreModule(frameSourceDeserializer: framesourceDeserializer,
+                                frameSourceListener: frameSourceListener,
+                                dataCaptureContextListener: contextDeserializer,
+                                dataCaptureViewListener: viewListener)
+        coreModule.didStart()
+        DeserializationLifeCycleDispatcher.shared.attach(observer: self)
+        coreModule.registerDataCaptureContextListener()
+        coreModule.registerDataCaptureViewListener()
+        coreModule.registerFrameSourceListener()
     }
 
-    // MARK: - DataCaptureContextProxy
+    @objc
+    func onReset() {
+        coreModule.didStop()
+        DeserializationLifeCycleDispatcher.shared.detach(observer: self)
+        coreModule.unregisterDataCaptureContextListener()
+        coreModule.unregisterDataCaptureViewListener()
+        coreModule.unregisterFrameSourceListener()
+    }
 
     // MARK: Context deserialization
 
     @objc(contextFromJSON:)
     public func contextFromJSON(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            guard let jsonString = call.options["context"] as! String? else {
-                call.reject(CommandError.invalidJSON.toJSONString())
-                return
-            }
-
-            self.context?.dispose()
-
-            do {
-                self.context = try self.deserializer.context(fromJSONString: jsonString).context
-            } catch let error {
-                call.reject(error.localizedDescription)
-                return
-            }
-
-            self.context!.addListener(self)
-
-            call.resolve()
+        guard let contextJson = call.options["context"] as? String else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
         }
+        coreModule.createContextFromJSON(contextJson, result: CapacitorResult(call))
     }
 
     @objc(updateContextFromJSON:)
     func updateContextFromJSON(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            guard let jsonString = call.options["context"] as! String? else {
-                call.reject(CommandError.invalidJSON.toJSONString())
-                return
-            }
-
-            guard let context = self.context else {
-                return self.contextFromJSON(call)
-            }
-
-            do {
-                try self.deserializer.update(context,
-                                             view: self.captureView,
-                                             components: self.components,
-                                             fromJSON: jsonString)
-            } catch let error {
-                call.reject(error.localizedDescription)
-                return
-            }
-
-            call.resolve()
+        guard let contextJson = call.options["context"] as? String else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
         }
+        coreModule.updateContextFromJSON(contextJson, result: CapacitorResult(call))
     }
 
     // MARK: Listeners
@@ -170,6 +165,13 @@ public class ScanditCaptureCore: CAPPlugin {
 
     @objc(subscribeViewListener:)
     func subscribeViewListener(_ call: CAPPluginCall) {
+        self.coreModule.registerDataCaptureViewListener()
+        call.resolve()
+    }
+
+    @objc(unsubscribeViewListener:)
+    func unsubscribeViewListener(_ call: CAPPluginCall) {
+        self.coreModule.unregisterDataCaptureViewListener()
         call.resolve()
     }
 
@@ -195,7 +197,7 @@ public class ScanditCaptureCore: CAPPlugin {
 
     @objc(disposeContext:)
     func disposeContext(_ call: CAPPluginCall) {
-        context?.dispose()
+        coreModule.disposeContext()
         call.resolve()
     }
 
@@ -203,7 +205,7 @@ public class ScanditCaptureCore: CAPPlugin {
 
     @objc(setViewPositionAndSize:)
     func setViewPositionAndSize(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        dispatchMainSync {
             let jsonObject = call.getObject("position")
             guard let viewPositionAndSizeJSON = try? ViewPositionAndSizeJSON.fromJSONObject(jsonObject as Any) else {
                 call.reject(CommandError.invalidJSON.toJSONString())
@@ -229,7 +231,7 @@ public class ScanditCaptureCore: CAPPlugin {
 
     @objc(showView:)
     func showView(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        dispatchMainSync {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeShown.toJSONString())
                 return
@@ -243,7 +245,7 @@ public class ScanditCaptureCore: CAPPlugin {
 
     @objc(hideView:)
     func hideView(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        dispatchMainSync {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeHidden.toJSONString())
                 return
@@ -259,123 +261,76 @@ public class ScanditCaptureCore: CAPPlugin {
 
     @objc(viewPointForFramePoint:)
     func viewPointForFramePoint(_ call: CAPPluginCall) {
-        guard let captureView = captureView else {
-            call.reject(CommandError.cantConvertPointWithoutView.toJSONString())
-            return
-        }
-
-        guard let pointJSON = try? PointJSON.fromJSONObject(call.options["point"] as Any) else {
+        guard let jsonString = call.getValue("point") as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-
-        let convertedPoint = captureView.viewPoint(forFramePoint: pointJSON.cgPoint)
-
-        call.resolve([
-            "x": convertedPoint.x,
-            "y": convertedPoint.y
-        ])
+        coreModule.viewPointForFramePoint(json: jsonString, result: CapacitorResult(call))
     }
 
     @objc(viewQuadrilateralForFrameQuadrilateral:)
     func viewQuadrilateralForFrameQuadrilateral(_ call: CAPPluginCall) {
-        guard let captureView = captureView else {
-            call.reject(CommandError.cantConvertQuadrilateralWithoutView.toJSONString())
-            return
-        }
-
-        guard let jsonString = (call.options["point"] as? NSDictionary)?.jsonString,
-              let quad = Quadrilateral(JSONString: jsonString) else {
+        guard let jsonString = call.getValue("point") as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-
-        let convertedQuadrilateral = captureView.viewQuadrilateral(forFrameQuadrilateral: quad)
-
-        call.resolve([
-            "topLeft": convertedQuadrilateral.topLeft.json,
-            "topRight": convertedQuadrilateral.topRight.json,
-            "bottomLeft": convertedQuadrilateral.bottomLeft.json,
-            "bottomRight": convertedQuadrilateral.bottomRight.json
-        ])
+        coreModule.viewQuadrilateralForFrameQuadrilateral(json: jsonString, result: CapacitorResult(call))
     }
 
     // MARK: - CameraProxy
 
     @objc(getCurrentCameraState:)
     func getCurrentCameraState(_ call: CAPPluginCall) {
-        guard let camera = context?.frameSource as? Camera else {
-            call.reject(CommandError.noCamera.toJSONString())
+        guard let positionJson = call.getString("position") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-
-        call.resolve([
-            "state": camera.currentState.jsonString
-        ])
+        coreModule.getCameraState(cameraPosition: positionJson, result: CapacitorResult(call))
     }
 
     @objc(getIsTorchAvailable:)
     func getIsTorchAvailable(_ call: CAPPluginCall) {
-        guard let jsonString = (call.options["position"] as? NSDictionary)?.jsonString,
-              let cameraPosition = CameraPosition(JSONString: jsonString)
-        else {
+        guard let positionJson = call.getString("position") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
+        coreModule.isTorchAvailable(cameraPosition: positionJson, result: CapacitorResult(call))
+    }
 
-        guard let camera = Camera(position: cameraPosition) else {
-            call.reject(CommandError.noCamera(withPosition: cameraPosition.jsonString).toJSONString())
-            return
-        }
-
-        call.resolve([
-            "isTorchAvailable": camera.isTorchAvailable
-        ])
+    @objc(registerListenerForCameraEvents:)
+    func registerListenerForCameraEvents(_ call: CAPPluginCall) {
+        coreModule.registerFrameSourceListener()
+        call.resolve()
+    }
+    
+    @objc(unregisterListenerForCameraEvents:)
+    func unregisterListenerForCameraEvents(_ call: CAPPluginCall) {
+        coreModule.unregisterFrameSourceListener()
+        call.resolve()
     }
 
     // MARK: - Defaults
 
     @objc(getDefaults:)
     func getDefaults(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            let temporaryCameraSettings = CameraSettings()
-            let temporaryView = DataCaptureView.init(frame: CGRect.zero)
-
-            let defaults = ScanditCaptureCoreDefaults(cameraSettings: temporaryCameraSettings,
-                                                      dataCaptureView: temporaryView,
-                                                      laserlineViewfinder: LaserlineViewfinder(),
-                                                      rectangularViewfinder: RectangularViewfinder(),
-                                                      aimerViewfinder: AimerViewfinder(),
-                                                      brush: Brush())
-            var defaultsDictionary: [String: Any]? {
-                    guard let data = try? JSONEncoder().encode(defaults) else { return nil }
-                    guard let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                        return nil
-                    }
-                    return json
-                }
-
-            call.resolve(defaultsDictionary ?? [:])
-        }
+        let defaults = coreModule.defaults.toEncodable()
+        call.resolve(defaults as PluginCallResultData)
     }
 
     // MARK: - FeedbackProxy
 
     @objc(emitFeedback:)
     func emitFeedback(_ call: CAPPluginCall) {
-        guard let jsonString = (call.options["feedback"] as? NSDictionary)?.jsonString,
-              let feedback = try? Feedback(fromJSONString: jsonString)
-        else {
+        guard let feedbackJson = call.getString("feedback") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-
-        feedback.emit()
+        coreModule.emitFeedback(json: feedbackJson, result: CapacitorResult(call))
     }
 
     @objc(getLastFrame:)
     func getLastFrame(_ call: CAPPluginCall) {
-        guard let lastFrame = ScanditCaptureCore.lastFrame else {
+        guard let lastFrame = LastFrameData.shared.frameData else {
             call.reject(CommandError.noFrameData.toJSONString())
             return
         }
@@ -387,7 +342,17 @@ public class ScanditCaptureCore: CAPPlugin {
     @objc(getLastFrameOrNull:)
     func getLastFrameOrNull(_ call: CAPPluginCall) {
         call.resolve([
-            "data": ScanditCaptureCore.lastFrame,
+            "data": LastFrameData.shared.frameData?.jsonString ?? "",
         ])
+    }
+}
+
+extension ScanditCapacitorCore: DeserializationLifeCycleObserver {
+    public func dataCaptureContext(deserialized context: DataCaptureContext?) {
+        self.context = context
+    }
+
+    public func dataCaptureView(deserialized view: DataCaptureView?) {
+        captureView = view
     }
 }

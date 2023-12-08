@@ -7,12 +7,10 @@
 package com.scandit.capacitor.datacapture.core.data.defaults
 
 import com.scandit.capacitor.datacapture.core.data.SerializableData
-import com.scandit.capacitor.datacapture.core.testing.OpenForTesting
-import com.scandit.capacitor.datacapture.core.utils.hexString
 import com.scandit.datacapture.core.ui.style.Brush
+import com.scandit.datacapture.frameworks.core.extensions.hexString
 import org.json.JSONObject
 
-@OpenForTesting
 data class SerializableBrushDefaults(
     private val fillColor: String?,
     private val strokeColor: String?,
