@@ -165,13 +165,11 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(subscribeViewListener:)
     func subscribeViewListener(_ call: CAPPluginCall) {
-        self.coreModule.registerDataCaptureViewListener()
         call.resolve()
     }
 
     @objc(unsubscribeViewListener:)
     func unsubscribeViewListener(_ call: CAPPluginCall) {
-        self.coreModule.unregisterDataCaptureViewListener()
         call.resolve()
     }
 
@@ -261,19 +259,21 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(viewPointForFramePoint:)
     func viewPointForFramePoint(_ call: CAPPluginCall) {
-        guard let jsonString = call.getValue("point") as? String else {
+        guard let pointDict = call.getValue("point") as? [String: Any] else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
+        let jsonString = pointDict.jsonString!
         coreModule.viewPointForFramePoint(json: jsonString, result: CapacitorResult(call))
     }
 
     @objc(viewQuadrilateralForFrameQuadrilateral:)
     func viewQuadrilateralForFrameQuadrilateral(_ call: CAPPluginCall) {
-        guard let jsonString = call.getValue("point") as? String else {
+        guard let pointDict = call.getValue("point") as? [String: Any] else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
+        let jsonString = pointDict.jsonString!
         coreModule.viewQuadrilateralForFrameQuadrilateral(json: jsonString, result: CapacitorResult(call))
     }
 
@@ -295,18 +295,6 @@ public class ScanditCapacitorCore: CAPPlugin {
             return
         }
         coreModule.isTorchAvailable(cameraPosition: positionJson, result: CapacitorResult(call))
-    }
-
-    @objc(registerListenerForCameraEvents:)
-    func registerListenerForCameraEvents(_ call: CAPPluginCall) {
-        coreModule.registerFrameSourceListener()
-        call.resolve()
-    }
-    
-    @objc(unregisterListenerForCameraEvents:)
-    func unregisterListenerForCameraEvents(_ call: CAPPluginCall) {
-        coreModule.unregisterFrameSourceListener()
-        call.resolve()
     }
 
     // MARK: - Defaults
