@@ -15,13 +15,10 @@ import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
 import com.scandit.capacitor.datacapture.core.utils.pxFromDp
 import com.scandit.capacitor.datacapture.core.utils.removeFromParent
 import com.scandit.datacapture.core.ui.DataCaptureView
-import com.scandit.datacapture.frameworks.core.utils.DefaultMainThread
 import com.scandit.datacapture.frameworks.core.utils.MainThread
 import java.lang.ref.WeakReference
 
-class DataCaptureViewHandler(
-    private val mainThread: MainThread = DefaultMainThread.getInstance()
-) {
+class DataCaptureViewHandler {
     private var latestInfo: ResizeAndMoveInfo = ResizeAndMoveInfo(0, 0, 0, 0, false)
     private var isVisible: Boolean = false
     private var dataCaptureViewReference: WeakReference<DataCaptureView?> = WeakReference(null)
@@ -40,7 +37,7 @@ class DataCaptureViewHandler(
     fun attachWebView(webView: View, @Suppress("UNUSED_PARAMETER") activity: AppCompatActivity) {
         if (this.webView != webView) {
             webViewReference = WeakReference(webView)
-            mainThread.runOnMainThread {
+            MainThread.runOnMainThread {
                 webView.bringToFront()
                 webView.setBackgroundColor(Color.TRANSPARENT)
             }
@@ -80,7 +77,7 @@ class DataCaptureViewHandler(
     private fun addDataCaptureView(dataCaptureView: DataCaptureView, activity: Activity) {
         dataCaptureViewReference = WeakReference(dataCaptureView)
 
-        mainThread.runOnMainThread {
+        MainThread.runOnMainThread {
             activity.addContentView(
                 dataCaptureView,
                 ViewGroup.LayoutParams(
@@ -98,7 +95,7 @@ class DataCaptureViewHandler(
     }
 
     private fun removeView(view: View, uiBlock: (() -> Unit)? = null) {
-        mainThread.runOnMainThread {
+        MainThread.runOnMainThread {
             view.removeFromParent()
             uiBlock?.invoke()
         }

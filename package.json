@@ -1,6 +1,6 @@
 {
   "name": "scandit-capacitor-datacapture-core",
-  "version": "6.21.1",
+  "version": "6.20.3",
   "description": "Scandit Data Capture SDK for Capacitor",
   "license": "Apache-2.0",
   "private": false,
@@ -9,17 +9,17 @@
     "email": "support@scandit.com"
   },
   "homepage": "https://github.com/Scandit/scandit-capacitor-datacapture-core",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/dts/index.d.ts",
+  "main": "dist/plugin.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/definitions.d.ts",
   "scripts": {
+    "postbuild": "node ./scripts/normalize-d-ts.js",
     "lint": "eslint ./src",
     "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
-    "build": "rollup -c rollup.config.js --bundleConfigAsCjs",
-    "clean": "rimraf ./dist .rollup.cache",
-    "watch": "tsc --watch",
-    "docs": "typedoc --out docs/ --entryPoints ./src/index.ts"
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "clean": "rimraf ./dist",
+    "watch": "tsc --watch"
   },
   "devDependencies": {
     "@capacitor/android": "^5.0.0",
@@ -27,20 +27,17 @@
     "@capacitor/ios": "^5.0.0",
     "@ionic/prettier-config": "^1.0.0",
     "@ionic/swiftlint-config": "^1.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "@types/node": "18.15.3",
+    "@typescript-eslint/eslint-plugin": "5.57.1",
+    "@typescript-eslint/parser": "5.57.1",
+    "eslint": "8.37.0",
     "prettier": "^2.0.5",
     "prettier-plugin-java": "^2.0.0",
     "rimraf": "^4.1.2",
-    "rollup": "3.25.1",
-    "@rollup/plugin-node-resolve": "15.0.2",
-    "@rollup/plugin-typescript": "11.1.0",
-    "@rollup/plugin-commonjs": "24.1.0",
+    "rollup": "^2.79.1",
     "swiftlint": "^1.0.1",
-    "typescript": "4.9.5",
-    "eslint": "8.37.0",
-    "@typescript-eslint/parser": "5.57.1",
-    "@typescript-eslint/eslint-plugin": "5.57.1",
-    "typedoc": "0.24.8"
+    "typescript": "4.9.5"
   },
   "peerDependencies": {
     "@capacitor/core": "^5.0.0"
@@ -48,7 +45,6 @@
   "files": [
     "dist/",
     "ios/",
-    "scripts/",
     "android/",
     "ScanditCapacitorDatacaptureCore.podspec"
   ],
@@ -61,9 +57,5 @@
     }
   },
   "prettier": "@ionic/prettier-config",
-  "swiftlint": "@ionic/swiftlint-config",
-  "dependencies": {
-    "@capacitor/cli": "^4.3.0",
-    "scandit-datacapture-frameworks-core": "6.21.1"
-  }
+  "swiftlint": "@ionic/swiftlint-config"
 }

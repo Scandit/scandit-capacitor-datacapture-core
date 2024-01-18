@@ -26,8 +26,6 @@ CAP_PLUGIN(ScanditCapacitorCore, "ScanditCaptureCoreNative",
            CAP_PLUGIN_METHOD(viewQuadrilateralForFrameQuadrilateral, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getCurrentCameraState, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getIsTorchAvailable, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(registerListenerForCameraEvents, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(unregisterListenerForCameraEvents, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getDefaults, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getLastFrame, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getLastFrameOrNull, CAPPluginReturnPromise);
