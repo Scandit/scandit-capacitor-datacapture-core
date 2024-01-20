@@ -21,6 +21,8 @@ import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureCo
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceListener
+import com.scandit.datacapture.frameworks.core.utils.DefaultLastFrameData
+import com.scandit.datacapture.frameworks.core.utils.DefaultMainThread
 import com.scandit.datacapture.frameworks.core.utils.LastFrameData
 import com.scandit.datacapture.frameworks.core.utils.MainThread
 import org.json.JSONException
@@ -56,6 +58,8 @@ class ScanditCaptureCoreNative :
         FrameworksDataCaptureViewListener(this),
         FrameworksFrameSourceDeserializer(frameSourceListener)
     )
+    private val mainThread: MainThread = DefaultMainThread.getInstance()
+    private val lastFrameData: LastFrameData = DefaultLastFrameData.getInstance()
 
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
@@ -165,6 +169,18 @@ class ScanditCaptureCoreNative :
         val positionJson = call.data.getString("position") ?: return
         coreModule.isTorchAvailable(positionJson, CapacitorResult(call))
     }
+
+    @PluginMethod
+    fun registerListenerForCameraEvents(call: PluginCall) {
+        coreModule.registerFrameSourceListener()
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun unregisterListenerForCameraEvents(call: PluginCall) {
+        coreModule.unregisterFrameSourceListener()
+        call.resolve()
+    }
     //endregion
 
     //region DataCaptureContextProxy
@@ -196,7 +212,7 @@ class ScanditCaptureCoreNative :
         val jsonString = call.data.getString("context")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
-        MainThread.runOnMainThread {
+        mainThread.runOnMainThread {
             coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
         }
     }
@@ -262,17 +278,26 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun subscribeContextListener(call: PluginCall) = call.resolve()
+    fun subscribeContextListener(call: PluginCall) {
+        coreModule.registerDataCaptureContextListener()
+        call.resolve()
+    }
 
     @PluginMethod
-    fun subscribeViewListener(call: PluginCall) = call.resolve()
+    fun subscribeViewListener(call: PluginCall) {
+        coreModule.registerDataCaptureViewListener()
+        call.resolve()
+    }
 
     @PluginMethod
-    fun unsubscribeViewListener(call: PluginCall) = call.resolve()
+    fun unsubscribeViewListener(call: PluginCall) {
+        coreModule.unregisterDataCaptureViewListener()
+        call.resolve()
+    }
 
     @PluginMethod
     fun getLastFrame(call: PluginCall) {
-        LastFrameData.getLastFrameDataJson {
+        lastFrameData.getLastFrameDataJson {
             if (it == null) {
                 call.reject(NullFrameError().serializeContent().toString())
                 return@getLastFrameDataJson
@@ -283,10 +308,16 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun getLastFrameOrNull(call: PluginCall) {
-        LastFrameData.getLastFrameDataJson {
+        lastFrameData.getLastFrameDataJson {
             CapacitorResult(call).success(it)
         }
     }
+
+    @PluginMethod
+    fun subscribeVolumeButtonObserver(call: PluginCall) = call.resolve()
+
+    @PluginMethod
+    fun unsubscribeVolumeButtonObserver(call: PluginCall) = call.resolve()
 
     //endregion
 
