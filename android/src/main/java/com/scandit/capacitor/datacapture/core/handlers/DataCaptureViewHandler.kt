@@ -68,7 +68,7 @@ class DataCaptureViewHandler(
         disposeCurrentWebView()
     }
 
-    private fun disposeCurrentDataCaptureView() {
+    fun disposeCurrentDataCaptureView() {
         val dataCaptureView = dataCaptureViewReference.get() ?: return
         removeDataCaptureView(dataCaptureView)
     }
