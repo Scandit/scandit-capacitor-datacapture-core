@@ -20,13 +20,3 @@ class CapacitorResult(private val call: PluginCall) : FrameworksResult {
         call.reject(errorMessage, errorMessage)
     }
 }
-
-class CapacitorNoopResult : FrameworksResult {
-    override fun success(result: Any?) {
-        // noop
-    }
-
-    override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
-        // noop
-    }
-}

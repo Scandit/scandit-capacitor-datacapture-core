@@ -1,13 +1,10 @@
-import { BaseNativeProxy, DataCaptureContextProxy } from 'scandit-datacapture-frameworks-core';
+import { DataCaptureContextProxy } from 'scandit-datacapture-frameworks-core';
 declare type DataCaptureContext = any;
-export declare class NativeDataCaptureContextProxy extends BaseNativeProxy implements DataCaptureContextProxy {
-    get framework(): string;
-    get frameworkVersion(): string;
+export declare class NativeDataCaptureContextProxy implements DataCaptureContextProxy {
+    private eventEmitter;
+    constructor();
     contextFromJSON(context: DataCaptureContext): Promise<void>;
     updateContextFromJSON(context: DataCaptureContext): Promise<void>;
-    addModeToContext(modeJson: string): Promise<void>;
-    removeModeFromContext(modeJson: string): Promise<void>;
-    removeAllModesFromContext(): Promise<void>;
     dispose(): void;
     registerListenerForEvents(): void;
     unsubscribeListener(): void;

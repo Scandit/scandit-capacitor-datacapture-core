@@ -1,6 +1,6 @@
 {
   "name": "scandit-capacitor-datacapture-core",
-  "version": "6.22.0",
+  "version": "6.21.3",
   "description": "Scandit Data Capture SDK for Capacitor",
   "license": "Apache-2.0",
   "private": false,
@@ -64,6 +64,6 @@
   "swiftlint": "@ionic/swiftlint-config",
   "dependencies": {
     "@capacitor/cli": "^4.3.0",
-    "scandit-datacapture-frameworks-core": "6.22.0"
+    "scandit-datacapture-frameworks-core": "6.21.3"
   }
 }
