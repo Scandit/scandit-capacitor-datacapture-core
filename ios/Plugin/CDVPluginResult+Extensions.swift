@@ -202,6 +202,11 @@ public struct CommandError {
                                                message: """
                                                There is no active data capture context
                                                """)
+    
+    public static let noWebView = CommandError(code: .noContext,
+                                               message: """
+                                               There is no webview attached yet
+                                               """)
 
     public static func barcodeCountDeserializationError(message: String) -> CommandError {
         CommandError(code: .barcodeCountDeserializationError,

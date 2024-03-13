@@ -114,8 +114,13 @@ class ScanditCaptureCoreNative :
         coreModule.onDestroy()
     }
 
-    override fun onDataCaptureViewDeserialized(dataCaptureView: DataCaptureView) =
+    override fun onDataCaptureViewDeserialized(dataCaptureView: DataCaptureView?) {
+        if (dataCaptureView == null) {
+            captureViewHandler.disposeCurrentDataCaptureView()
+            return
+        }
         captureViewHandler.attachDataCaptureView(dataCaptureView, this.activity)
+    }
 
     private fun checkCameraPermission(): Boolean =
         getPermissionState("camera") == PermissionState.GRANTED
@@ -180,6 +185,12 @@ class ScanditCaptureCoreNative :
     fun unregisterListenerForCameraEvents(call: PluginCall) {
         coreModule.unregisterFrameSourceListener()
         call.resolve()
+    }
+
+    @PluginMethod
+    fun switchCameraToDesiredState(call: PluginCall) {
+        val desiredStateJson = call.data.getString("desiredState") ?: return
+        coreModule.switchCameraToDesiredState(desiredStateJson, CapacitorResult(call))
     }
     //endregion
 
@@ -320,6 +331,58 @@ class ScanditCaptureCoreNative :
     fun unsubscribeVolumeButtonObserver(call: PluginCall) = call.resolve()
 
     //endregion
+
+    @PluginMethod
+    fun addModeToContext(call: PluginCall) {
+        val modeJson = call.data.getString("modeJson")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.addModeToContext(modeJson, CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun removeModeFromContext(call: PluginCall) {
+        val modeJson = call.data.getString("modeJson")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.removeModeFromContext(modeJson, CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun removeAllModesFromContext(call: PluginCall) {
+        coreModule.removeAllModes(CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun createDataCaptureView(call: PluginCall) {
+        val viewJson = call.data.getString("viewJson")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.createDataCaptureView(viewJson, CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun updateDataCaptureView(call: PluginCall) {
+        val viewJson = call.data.getString("viewJson")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.updateDataCaptureView(viewJson, CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun addOverlay(call: PluginCall) {
+        val overlayJson = call.data.getString("overlayJson")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.addOverlayToView(overlayJson, CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun removeOverlay(call: PluginCall) {
+        val overlayJson = call.data.getString("overlayJson")
+            ?: return call.reject(EMPTY_STRING_ERROR)
+        coreModule.removeOverlayFromView(overlayJson, CapacitorResult(call))
+    }
+
+    @PluginMethod
+    fun removeAllOverlays(call: PluginCall) {
+        coreModule.removeAllOverlays(CapacitorResult(call))
+    }
 
     override fun emit(eventName: String, payload: MutableMap<String, Any?>) {
         payload["name"] = eventName

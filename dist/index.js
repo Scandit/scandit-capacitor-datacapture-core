@@ -1,4 +1,4 @@
-import { BaseDataCaptureView, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, FactoryMaker, DataCaptureContextEvents, ContextStatus, BaseNativeProxy, DataCaptureViewEvents, FrameSourceListenerEvents, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, LaserlineViewfinder, RectangularViewfinder, LaserlineViewfinderStyle, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource } from './core.js';
+import { BaseDataCaptureView, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureContextEvents, ContextStatus, DataCaptureViewEvents, FactoryMaker, FrameSourceListenerEvents, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, LaserlineViewfinder, RectangularViewfinder, LaserlineViewfinderStyle, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource } from './core.js';
 export { ImageBuffer, LogoStyle } from './core.js';
 
 /******************************************************************************
@@ -199,6 +199,9 @@ class DataCaptureView {
     addControl(control) {
         this.baseDataCaptureView.addControl(control);
     }
+    addControlWithAnchorAndOffset(control, anchor, offset) {
+        return this.baseDataCaptureView.addControlWithAnchorAndOffset(control, anchor, offset);
+    }
     removeControl(control) {
         this.baseDataCaptureView.removeControl(control);
     }
@@ -263,7 +266,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.21.3';
+        return '6.22.1';
     }
 }
 
@@ -346,11 +349,20 @@ var CapacitorFunction;
     CapacitorFunction["GetIsTorchAvailable"] = "getIsTorchAvailable";
     CapacitorFunction["RegisterListenerForCameraEvents"] = "registerListenerForCameraEvents";
     CapacitorFunction["UnregisterListenerForCameraEvents"] = "unregisterListenerForCameraEvents";
+    CapacitorFunction["SwitchCameraToDesiredState"] = "switchCameraToDesiredState";
     CapacitorFunction["GetLastFrame"] = "getLastFrame";
     CapacitorFunction["GetLastFrameOrNull"] = "getLastFrameOrNull";
     CapacitorFunction["EmitFeedback"] = "emitFeedback";
     CapacitorFunction["SubscribeVolumeButtonObserver"] = "subscribeVolumeButtonObserver";
     CapacitorFunction["UnsubscribeVolumeButtonObserver"] = "unsubscribeVolumeButtonObserver";
+    CapacitorFunction["AddModeToContext"] = "addModeToContext";
+    CapacitorFunction["RemoveModeFromContext"] = "removeModeFromContext";
+    CapacitorFunction["RemoveAllModesFromContext"] = "removeAllModesFromContext";
+    CapacitorFunction["CreateDataCaptureView"] = "createDataCaptureView";
+    CapacitorFunction["UpdateDataCaptureView"] = "updateDataCaptureView";
+    CapacitorFunction["AddOverlay"] = "addOverlay";
+    CapacitorFunction["RemoveOverlay"] = "removeOverlay";
+    CapacitorFunction["RemoveAllOverlays"] = "removeAllOverlays";
 })(CapacitorFunction || (CapacitorFunction = {}));
 const pluginName = 'ScanditCaptureCoreNative';
 // tslint:disable-next-line:variable-name
@@ -1075,9 +1087,12 @@ class NativeFeedbackProxy {
     }
 }
 
-class NativeDataCaptureContextProxy {
-    constructor() {
-        this.eventEmitter = FactoryMaker.getInstance('EventEmitter');
+class NativeDataCaptureContextProxy extends BaseNativeProxy {
+    get framework() {
+        return 'capacitor';
+    }
+    get frameworkVersion() {
+        return (() => Capacitor$1.defaults.capacitorVersion)();
     }
     contextFromJSON(context) {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.ContextFromJSON]({
@@ -1088,6 +1103,19 @@ class NativeDataCaptureContextProxy {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UpdateContextFromJSON]({
             context: JSON.stringify(context.toJSON()),
         });
+    }
+    addModeToContext(modeJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.AddModeToContext]({
+            modeJson: modeJson,
+        });
+    }
+    removeModeFromContext(modeJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveModeFromContext]({
+            modeJson: modeJson,
+        });
+    }
+    removeAllModesFromContext() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveAllModesFromContext]();
     }
     dispose() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.DisposeContext]();
@@ -1160,6 +1188,29 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
             return viewQuadrilateral.data;
         });
     }
+    createView(viewJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.CreateDataCaptureView]({
+            viewJson: viewJson,
+        });
+    }
+    updateView(viewJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UpdateDataCaptureView]({
+            viewJson: viewJson,
+        });
+    }
+    addOverlay(overlayJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.AddOverlay]({
+            overlayJson: overlayJson,
+        });
+    }
+    removeOverlay(overlayJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveOverlay]({
+            overlayJson: overlayJson,
+        });
+    }
+    removeAllOverlays() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveAllOverlays]();
+    }
     registerListenerForViewEvents() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeViewListener]();
     }
@@ -1207,10 +1258,11 @@ class NativeCameraProxy {
             return parsedData;
         });
     }
-    // TODO Position is used in RN but not here....
     getCurrentCameraState(_position) {
         return __awaiter(this, void 0, void 0, function* () {
-            const cameraState = yield window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetCurrentCameraState]();
+            const cameraState = yield window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetCurrentCameraState]({
+                position: _position,
+            });
             return cameraState.data;
         });
     }
@@ -1222,6 +1274,11 @@ class NativeCameraProxy {
             return torchAvailability.data;
         });
     }
+    switchCameraToDesiredState(desiredStateJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SwitchCameraToDesiredState]({
+            desiredState: desiredStateJson,
+        });
+    }
     registerListenerForCameraEvents() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
     }
@@ -1230,9 +1287,6 @@ class NativeCameraProxy {
     }
     subscribeDidChangeState() {
         this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
-    }
-    unsubscribeDidChangeState() {
-        this.didChangeState.remove();
     }
     notifyListeners(event) {
         if (!event) {
@@ -1261,6 +1315,11 @@ class NativeImageFrameSourceProxy {
             return cameraState.data;
         });
     }
+    switchCameraToDesiredState(desiredStateJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SwitchCameraToDesiredState]({
+            desiredState: desiredStateJson,
+        });
+    }
     registerListenerForEvents() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
     }
@@ -1269,9 +1328,6 @@ class NativeImageFrameSourceProxy {
     }
     subscribeDidChangeState() {
         this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
-    }
-    unsubscribeDidChangeState() {
-        this.didChangeState.remove();
     }
     notifyListeners(event) {
         if (!event) {

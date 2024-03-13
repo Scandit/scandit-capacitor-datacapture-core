@@ -63,13 +63,6 @@ public class ScanditCapacitorCore: CAPPlugin {
         Deserializers.Factory.remove(modeDeserialzer)
     }
 
-    public static func registerComponentDeserializer(_ componentDeserializer: DataCaptureComponentDeserializer) {
-        Deserializers.Factory.add(componentDeserializer)
-    }
-
-    public static func unregisterComponentDeserializer(_ componentDeserializer: DataCaptureComponentDeserializer) {
-        Deserializers.Factory.remove(componentDeserializer)
-    }
 
     private static var contextListenersLock = os_unfair_lock()
     private static var contextListeners = NSMutableSet()
@@ -282,6 +275,7 @@ public class ScanditCapacitorCore: CAPPlugin {
     @objc(getCurrentCameraState:)
     func getCurrentCameraState(_ call: CAPPluginCall) {
         guard let positionJson = call.getString("position") else {
+
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -302,11 +296,20 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.registerFrameSourceListener()
         call.resolve()
     }
-    
+
     @objc(unregisterListenerForCameraEvents:)
     func unregisterListenerForCameraEvents(_ call: CAPPluginCall) {
         coreModule.unregisterFrameSourceListener()
         call.resolve()
+    }
+
+    @objc(switchCameraToDesiredState:)
+    func switchCameraToDesiredState(_ call: CAPPluginCall) {
+        guard let desiredStateJson = call.getString("desiredState") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+        coreModule.switchCameraToDesiredState(stateJson: desiredStateJson, result: CapacitorResult(call))
     }
 
     // MARK: - Defaults
@@ -344,6 +347,71 @@ public class ScanditCapacitorCore: CAPPlugin {
         call.resolve([
             "data": LastFrameData.shared.frameData?.jsonString ?? "",
         ])
+    }
+
+    @objc(addModeToContext:)
+    func addModeToContext(_ call: CAPPluginCall) {
+        guard let modeJson = call.getString("modeJson") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+        coreModule.addModeToContext(modeJson: modeJson, result: CapacitorResult(call))
+    }
+    
+    @objc(removeModeFromContext:)
+    func removeModeFromContext(_ call: CAPPluginCall) {
+         guard let modeJson = call.getString("modeJson") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+        coreModule.removeModeFromContext(modeJson: modeJson, result: CapacitorResult(call))
+    }
+    
+    @objc(removeAllModes:)
+    func removeAllModes(_ call: CAPPluginCall) {
+        coreModule.removeAllModes(result: CapacitorResult(call))
+    }
+    
+    @objc(createDataCaptureView:)
+    func createDataCaptureView(_ call: CAPPluginCall) {
+        guard let viewJson = call.getString("viewJson") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+
+        _ = coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
+    }
+    
+    @objc(updateDataCaptureView:)
+    func updateDataCaptureView(_ call: CAPPluginCall) {
+        guard let viewJson = call.getString("viewJson") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+        coreModule.updateDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
+    }
+
+    @objc(addOverlay:)
+    func addOverlay(_ call: CAPPluginCall) {
+        guard let overlayJson = call.getString("overlayJson") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+        coreModule.addOverlayToView(overlayJson: overlayJson, result: CapacitorResult(call))
+    }
+
+    @objc(removeOverlay:)
+    func removeOverlay(_ call: CAPPluginCall) {
+        guard let overlayJson = call.getString("overlayJson") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
+            return
+        }
+        coreModule.removeOverlayFromView(overlayJson: overlayJson, result: CapacitorResult(call))
+    }
+
+    @objc(removeAllOverlays:)
+    func removeAllOverlays(_ call: CAPPluginCall) {
+        coreModule.removeAllOverlays(result: CapacitorResult(call))
     }
 }
 

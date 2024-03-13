@@ -17,11 +17,20 @@ export declare enum CapacitorFunction {
     GetIsTorchAvailable = "getIsTorchAvailable",
     RegisterListenerForCameraEvents = "registerListenerForCameraEvents",
     UnregisterListenerForCameraEvents = "unregisterListenerForCameraEvents",
+    SwitchCameraToDesiredState = "switchCameraToDesiredState",
     GetLastFrame = "getLastFrame",
     GetLastFrameOrNull = "getLastFrameOrNull",
     EmitFeedback = "emitFeedback",
     SubscribeVolumeButtonObserver = "subscribeVolumeButtonObserver",
-    UnsubscribeVolumeButtonObserver = "unsubscribeVolumeButtonObserver"
+    UnsubscribeVolumeButtonObserver = "unsubscribeVolumeButtonObserver",
+    AddModeToContext = "addModeToContext",
+    RemoveModeFromContext = "removeModeFromContext",
+    RemoveAllModesFromContext = "removeAllModesFromContext",
+    CreateDataCaptureView = "createDataCaptureView",
+    UpdateDataCaptureView = "updateDataCaptureView",
+    AddOverlay = "addOverlay",
+    RemoveOverlay = "removeOverlay",
+    RemoveAllOverlays = "removeAllOverlays"
 }
 export interface CapacitorWindow extends Window {
     Scandit: any;
