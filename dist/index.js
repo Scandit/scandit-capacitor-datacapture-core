@@ -266,7 +266,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.22.1';
+        return '6.23.0';
     }
 }
 
