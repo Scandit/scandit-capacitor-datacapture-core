@@ -8,5 +8,7 @@ export declare class CapacitorError {
 export interface BlockingModeListenerResult {
     enabled: boolean;
 }
-export declare const capacitorExec: (successCallback: Optional<Function>, errorCallback: Optional<Function>, pluginName: string, functionName: string, args: Optional<[any]>) => void;
+export declare const capacitorExec: (successCallback: Optional<Function>, errorCallback: Optional<Function>, pluginName: string, functionName: string, args: Optional<[
+    any
+]>) => void;
 export declare const doReturnWithFinish: (finishCallbackID: string, result: any) => any;
