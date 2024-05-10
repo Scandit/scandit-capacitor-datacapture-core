@@ -2,7 +2,7 @@ export type Optional<T> = T | null;
 export interface ScanditCaptureCorePluginInterface {
     initializePlugins(): Promise<any>;
 }
-export { Color, Direction, MarginsWithUnit, MeasureUnit, NumberWithUnit, Orientation, Point, PointWithUnit, Quadrilateral, Rect, RectWithUnit, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Anchor, LogoStyle, ScanIntention } from 'scandit-datacapture-frameworks-core';
+export { Color, Direction, MarginsWithUnit, MeasureUnit, NumberWithUnit, Orientation, Point, PointWithUnit, Quadrilateral, Rect, RectWithUnit, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Anchor, LogoStyle } from 'scandit-datacapture-frameworks-core';
 export { TorchSwitchControl, ZoomSwitchControl } from 'scandit-datacapture-frameworks-core';
 export { NoneLocationSelection, RadiusLocationSelection, RectangularLocationSelection, LocationSelection } from 'scandit-datacapture-frameworks-core';
 export { AimerViewfinder, LaserlineViewfinder, LaserlineViewfinderStyle, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, Viewfinder } from 'scandit-datacapture-frameworks-core';

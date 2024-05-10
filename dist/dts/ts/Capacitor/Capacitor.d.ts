@@ -6,7 +6,6 @@ export declare enum CapacitorFunction {
     DisposeContext = "disposeContext",
     UpdateContextFromJSON = "updateContextFromJSON",
     SubscribeContextListener = "subscribeContextListener",
-    UnsubscribeContextListener = "unsubscribeContextListener",
     SetViewPositionAndSize = "setViewPositionAndSize",
     ShowView = "showView",
     HideView = "hideView",
@@ -41,8 +40,6 @@ export declare const pluginName = "ScanditCaptureCoreNative";
 export declare const Capacitor: {
     pluginName: string;
     defaults: CoreDefaults;
-    exec: (success: Optional<Function>, error: Optional<Function>, functionName: string, args: Optional<[
-        any
-    ]>) => void;
+    exec: (success: Optional<Function>, error: Optional<Function>, functionName: string, args: Optional<[any]>) => void;
 };
 export declare const getDefaults: () => Promise<CoreDefaults>;
