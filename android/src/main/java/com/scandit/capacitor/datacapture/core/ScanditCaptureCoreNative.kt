@@ -15,7 +15,6 @@ import com.scandit.capacitor.datacapture.core.utils.CapacitorResult
 import com.scandit.datacapture.core.source.*
 import com.scandit.datacapture.core.ui.DataCaptureView
 import com.scandit.datacapture.frameworks.core.CoreModule
-import com.scandit.datacapture.frameworks.core.deserialization.DefaultDeserializationLifecycleObserver
 import com.scandit.datacapture.frameworks.core.deserialization.DeserializationLifecycleObserver
 import com.scandit.datacapture.frameworks.core.events.Emitter
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureContextListener
@@ -61,8 +60,6 @@ class ScanditCaptureCoreNative :
     )
     private val mainThread: MainThread = DefaultMainThread.getInstance()
     private val lastFrameData: LastFrameData = DefaultLastFrameData.getInstance()
-    private val deserializationLifecycleObserver: DeserializationLifecycleObserver =
-        DefaultDeserializationLifecycleObserver.getInstance()
 
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
@@ -92,7 +89,7 @@ class ScanditCaptureCoreNative :
 
         captureViewHandler.attachWebView(bridge.webView, bridge.activity)
         coreModule.onCreate(this.context)
-        deserializationLifecycleObserver.attach(this)
+        DeserializationLifecycleObserver.attach(this)
     }
 
     override fun handleOnStart() {
@@ -113,7 +110,7 @@ class ScanditCaptureCoreNative :
     }
 
     override fun handleOnDestroy() {
-        deserializationLifecycleObserver.detach(this)
+        DeserializationLifecycleObserver.detach(this)
         coreModule.onDestroy()
     }
 
@@ -294,12 +291,6 @@ class ScanditCaptureCoreNative :
     @PluginMethod
     fun subscribeContextListener(call: PluginCall) {
         coreModule.registerDataCaptureContextListener()
-        call.resolve()
-    }
-
-    @PluginMethod
-    fun unsubscribeContextListener(call: PluginCall) {
-        coreModule.unregisterDataCaptureContextListener()
         call.resolve()
     }
 

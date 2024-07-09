@@ -151,12 +151,6 @@ public class ScanditCapacitorCore: CAPPlugin {
         call.resolve()
     }
 
-    @objc(unsubscribeContextListener:)
-    func unsubscribeContextListener(_ call: CAPPluginCall) {
-        self.coreModule.unregisterDataCaptureContextListener()
-        call.resolve()
-    }
-
     @objc(subscribeContextFrameListener:)
     func subscribeContextFrameListener(_ call: CAPPluginCall) {
         call.resolve()
