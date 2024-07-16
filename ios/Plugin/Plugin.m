@@ -13,6 +13,7 @@ CAP_PLUGIN(ScanditCapacitorCore, "ScanditCaptureCoreNative",
            CAP_PLUGIN_METHOD(contextFromJSON, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(updateContextFromJSON, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeContextListener, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(unsubscribeContextListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeContextFrameListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(subscribeViewListener, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(unsubscribeViewListener, CAPPluginReturnPromise);

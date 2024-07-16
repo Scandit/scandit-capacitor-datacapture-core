@@ -11,7 +11,7 @@ def safeExtGet(prop, fallback) {
 buildscript {
     ext {
         kotlin_version = "1.8.20"
-        agp_version = "8.0.1"
+        agp_version = "8.1.0"
     }
     repositories {
         google()
@@ -56,7 +56,7 @@ repositories {
 }
 
 dependencies {
-    def sdk_version = "6.22.3"
+    def sdk_version = "6.24.2"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
