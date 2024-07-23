@@ -1,5 +1,5 @@
 import { BaseDataCaptureView, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureContextEvents, ContextStatus, DataCaptureViewEvents, FactoryMaker, FrameSourceListenerEvents, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, LaserlineViewfinder, RectangularViewfinder, LaserlineViewfinderStyle, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource } from './core.js';
-export { ImageBuffer, LogoStyle, ScanIntention } from './core.js';
+export { ImageBuffer, LogoStyle } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -266,7 +266,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.24.2';
+        return '6.23.4';
     }
 }
 
@@ -338,7 +338,6 @@ var CapacitorFunction;
     CapacitorFunction["DisposeContext"] = "disposeContext";
     CapacitorFunction["UpdateContextFromJSON"] = "updateContextFromJSON";
     CapacitorFunction["SubscribeContextListener"] = "subscribeContextListener";
-    CapacitorFunction["UnsubscribeContextListener"] = "unsubscribeContextListener";
     CapacitorFunction["SetViewPositionAndSize"] = "setViewPositionAndSize";
     CapacitorFunction["ShowView"] = "showView";
     CapacitorFunction["HideView"] = "hideView";
@@ -1121,11 +1120,11 @@ class NativeDataCaptureContextProxy extends BaseNativeProxy {
     dispose() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.DisposeContext]();
     }
-    registerListenerForDataCaptureContext() {
+    registerListenerForEvents() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeContextListener]();
     }
-    unregisterListenerForDataCaptureContext() {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeContextListener]();
+    unsubscribeListener() {
+        // TODO This hasnt been implemented on capacitor
     }
     subscribeDidChangeStatus() {
         window.Capacitor.Plugins[Capacitor$1.pluginName]
@@ -1148,7 +1147,6 @@ class NativeDataCaptureContextProxy extends BaseNativeProxy {
                 // TODO: This needs to be fixed, not working on develop
                 //const contextStatus = (ContextStatus as any as PrivateContextStatus).fromJSON(event.context);
                 // this.eventEmitter.emit(DataCaptureContextEvents.didChangeStatus, contextStatus);
-                // https://scandit.atlassian.net/browse/SDC-21050
                 this.eventEmitter.emit(DataCaptureContextEvents.didChangeStatus, new ContextStatus());
                 break;
             case DataCaptureContextEvents.didStartObservingContext:
@@ -1158,6 +1156,10 @@ class NativeDataCaptureContextProxy extends BaseNativeProxy {
     }
 }
 
+var DataCaptureViewListenerEvent;
+(function (DataCaptureViewListenerEvent) {
+    DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "DataCaptureViewListener.onSizeChanged";
+})(DataCaptureViewListenerEvent || (DataCaptureViewListenerEvent = {}));
 class NativeDataCaptureViewProxy extends BaseNativeProxy {
     setPositionAndSize(top, left, width, height, shouldBeUnderWebView) {
         return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SetViewPositionAndSize]({
@@ -1217,7 +1219,7 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
     }
     subscribeDidChangeSize() {
         window.Capacitor.Plugins[Capacitor$1.pluginName]
-            .addListener(DataCaptureViewEvents.didChangeSize, this.notifyListeners.bind(this));
+            .addListener(DataCaptureViewListenerEvent.DidChangeSizeOrientation, this.notifyListeners.bind(this));
     }
     notifyListeners(event) {
         if (!event) {
@@ -1228,7 +1230,7 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
         }
         event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
         switch (event.name) {
-            case DataCaptureViewEvents.didChangeSize:
+            case DataCaptureViewListenerEvent.DidChangeSizeOrientation:
                 this.eventEmitter.emit(DataCaptureViewEvents.didChangeSize, JSON.stringify(event));
                 break;
         }
@@ -1281,7 +1283,7 @@ class NativeCameraProxy {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
     }
     unregisterListenerForCameraEvents() {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
     }
     subscribeDidChangeState() {
         this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
