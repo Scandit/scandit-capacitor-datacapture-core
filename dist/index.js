@@ -1,5 +1,5 @@
 import { BaseDataCaptureView, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureContextEvents, ContextStatus, DataCaptureViewEvents, FactoryMaker, FrameSourceListenerEvents, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, LaserlineViewfinder, RectangularViewfinder, LaserlineViewfinderStyle, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource } from './core.js';
-export { ImageBuffer, LogoStyle } from './core.js';
+export { ImageBuffer, LogoStyle, ScanIntention } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -266,7 +266,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.23.4';
+        return '6.25.1';
     }
 }
 
@@ -338,6 +338,7 @@ var CapacitorFunction;
     CapacitorFunction["DisposeContext"] = "disposeContext";
     CapacitorFunction["UpdateContextFromJSON"] = "updateContextFromJSON";
     CapacitorFunction["SubscribeContextListener"] = "subscribeContextListener";
+    CapacitorFunction["UnsubscribeContextListener"] = "unsubscribeContextListener";
     CapacitorFunction["SetViewPositionAndSize"] = "setViewPositionAndSize";
     CapacitorFunction["ShowView"] = "showView";
     CapacitorFunction["HideView"] = "hideView";
@@ -725,6 +726,7 @@ Capacitor.Plugins;
 class WebPlugin {
     constructor(config) {
         this.listeners = {};
+        this.retainedEventArguments = {};
         this.windowListeners = {};
         if (config) {
             // TODO: add link to upgrade guide
@@ -733,9 +735,11 @@ class WebPlugin {
         }
     }
     addListener(eventName, listenerFunc) {
+        let firstListener = false;
         const listeners = this.listeners[eventName];
         if (!listeners) {
             this.listeners[eventName] = [];
+            firstListener = true;
         }
         this.listeners[eventName].push(listenerFunc);
         // If we haven't added a window listener for this event and it requires one,
@@ -744,14 +748,11 @@ class WebPlugin {
         if (windowListener && !windowListener.registered) {
             this.addWindowListener(windowListener);
         }
+        if (firstListener) {
+            this.sendRetainedArgumentsForEvent(eventName);
+        }
         const remove = async () => this.removeListener(eventName, listenerFunc);
         const p = Promise.resolve({ remove });
-        Object.defineProperty(p, 'remove', {
-            value: async () => {
-                console.warn(`Using addListener() without 'await' is deprecated.`);
-                await remove();
-            },
-        });
         return p;
     }
     async removeAllListeners() {
@@ -761,11 +762,20 @@ class WebPlugin {
         }
         this.windowListeners = {};
     }
-    notifyListeners(eventName, data) {
+    notifyListeners(eventName, data, retainUntilConsumed) {
         const listeners = this.listeners[eventName];
-        if (listeners) {
-            listeners.forEach(listener => listener(data));
+        if (!listeners) {
+            if (retainUntilConsumed) {
+                let args = this.retainedEventArguments[eventName];
+                if (!args) {
+                    args = [];
+                }
+                args.push(data);
+                this.retainedEventArguments[eventName] = args;
+            }
+            return;
         }
+        listeners.forEach(listener => listener(data));
     }
     hasListeners(eventName) {
         return !!this.listeners[eventName].length;
@@ -809,6 +819,16 @@ class WebPlugin {
         }
         window.removeEventListener(handle.windowEventName, handle.handler);
         handle.registered = false;
+    }
+    sendRetainedArgumentsForEvent(eventName) {
+        const args = this.retainedEventArguments[eventName];
+        if (!args) {
+            return;
+        }
+        delete this.retainedEventArguments[eventName];
+        args.forEach(arg => {
+            this.notifyListeners(eventName, arg);
+        });
     }
 }
 /******** END WEB VIEW PLUGIN ********/
@@ -972,7 +992,8 @@ const buildRequestInit = (options, extra = {}) => {
         }
         output.body = params.toString();
     }
-    else if (type.includes('multipart/form-data')) {
+    else if (type.includes('multipart/form-data') ||
+        options.data instanceof FormData) {
         const form = new FormData();
         if (options.data instanceof FormData) {
             options.data.forEach((value, key) => {
@@ -1120,11 +1141,11 @@ class NativeDataCaptureContextProxy extends BaseNativeProxy {
     dispose() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.DisposeContext]();
     }
-    registerListenerForEvents() {
+    registerListenerForDataCaptureContext() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeContextListener]();
     }
-    unsubscribeListener() {
-        // TODO This hasnt been implemented on capacitor
+    unregisterListenerForDataCaptureContext() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeContextListener]();
     }
     subscribeDidChangeStatus() {
         window.Capacitor.Plugins[Capacitor$1.pluginName]
@@ -1147,6 +1168,7 @@ class NativeDataCaptureContextProxy extends BaseNativeProxy {
                 // TODO: This needs to be fixed, not working on develop
                 //const contextStatus = (ContextStatus as any as PrivateContextStatus).fromJSON(event.context);
                 // this.eventEmitter.emit(DataCaptureContextEvents.didChangeStatus, contextStatus);
+                // https://scandit.atlassian.net/browse/SDC-21050
                 this.eventEmitter.emit(DataCaptureContextEvents.didChangeStatus, new ContextStatus());
                 break;
             case DataCaptureContextEvents.didStartObservingContext:
@@ -1156,10 +1178,6 @@ class NativeDataCaptureContextProxy extends BaseNativeProxy {
     }
 }
 
-var DataCaptureViewListenerEvent;
-(function (DataCaptureViewListenerEvent) {
-    DataCaptureViewListenerEvent["DidChangeSizeOrientation"] = "DataCaptureViewListener.onSizeChanged";
-})(DataCaptureViewListenerEvent || (DataCaptureViewListenerEvent = {}));
 class NativeDataCaptureViewProxy extends BaseNativeProxy {
     setPositionAndSize(top, left, width, height, shouldBeUnderWebView) {
         return new Promise((resolve, reject) => window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SetViewPositionAndSize]({
@@ -1219,7 +1237,7 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
     }
     subscribeDidChangeSize() {
         window.Capacitor.Plugins[Capacitor$1.pluginName]
-            .addListener(DataCaptureViewListenerEvent.DidChangeSizeOrientation, this.notifyListeners.bind(this));
+            .addListener(DataCaptureViewEvents.didChangeSize, this.notifyListeners.bind(this));
     }
     notifyListeners(event) {
         if (!event) {
@@ -1230,7 +1248,7 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
         }
         event = Object.assign(Object.assign(Object.assign({}, event), event.argument), { argument: undefined });
         switch (event.name) {
-            case DataCaptureViewListenerEvent.DidChangeSizeOrientation:
+            case DataCaptureViewEvents.didChangeSize:
                 this.eventEmitter.emit(DataCaptureViewEvents.didChangeSize, JSON.stringify(event));
                 break;
         }
@@ -1283,7 +1301,7 @@ class NativeCameraProxy {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
     }
     unregisterListenerForCameraEvents() {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
     }
     subscribeDidChangeState() {
         this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
