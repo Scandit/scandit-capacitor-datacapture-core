@@ -266,7 +266,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.25.2';
+        return '6.26.0';
     }
 }
 
@@ -1450,5 +1450,5 @@ registerPlugin(corePluginName, {
 // tslint:disable-next-line:variable-name
 const ScanditCaptureCorePlugin = new ScanditCaptureCorePluginImplementation();
 
-export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Feedback, FocusGestureStrategy, FocusRange, FrameSourceState, HTMLElementState, LaserlineViewfinder, LaserlineViewfinderStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
+export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Feedback, FocusGestureStrategy, FocusRange, FrameSourceState, HTMLElementState, ImageFrameSource, LaserlineViewfinder, LaserlineViewfinderStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
 //# sourceMappingURL=index.js.map

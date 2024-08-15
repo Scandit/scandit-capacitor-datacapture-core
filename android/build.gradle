@@ -56,7 +56,7 @@ repositories {
 }
 
 dependencies {
-    def sdk_version = "6.25.2"
+    def sdk_version = "6.26.0"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
