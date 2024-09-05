@@ -6,13 +6,12 @@ import com.getcapacitor.*
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
-import com.scandit.capacitor.datacapture.core.communication.CameraPermissionGrantedListener
 import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
-import com.scandit.capacitor.datacapture.core.data.defaults.*
 import com.scandit.capacitor.datacapture.core.errors.*
 import com.scandit.capacitor.datacapture.core.handlers.DataCaptureViewHandler
 import com.scandit.capacitor.datacapture.core.utils.CapacitorResult
-import com.scandit.datacapture.core.source.*
+import com.scandit.datacapture.core.source.FrameSourceState
+import com.scandit.datacapture.core.source.FrameSourceStateDeserializer
 import com.scandit.datacapture.core.ui.DataCaptureView
 import com.scandit.datacapture.frameworks.core.CoreModule
 import com.scandit.datacapture.frameworks.core.deserialization.DefaultDeserializationLifecycleObserver
@@ -128,44 +127,25 @@ class ScanditCaptureCoreNative :
     private fun checkCameraPermission(): Boolean =
         getPermissionState("camera") == PermissionState.GRANTED
 
-    private fun checkOrRequestInitialCameraPermission(call: PluginCall) {
-        if (getPermissionState("camera") != PermissionState.GRANTED) {
-            requestPermissionForAlias("camera", call, "initialCameraPermsCallback")
+    private fun checkOrRequestCameraPermissions(call: PluginCall) {
+        if (!checkCameraPermission()) {
+            requestPermissionForAlias("camera", call, "onCameraPermissionResult")
         } else {
-            updateContext(call)
-        }
-    }
-
-    private fun checkOrRequestUpdateCameraPermission(call: PluginCall) {
-        if (getPermissionState("camera") != PermissionState.GRANTED) {
-            requestPermissionForAlias("camera", call, "updateCameraPermsCallback")
-        } else {
-            updateContext(call)
+            onCameraPermissionResult(call)
         }
     }
 
     @Suppress("unused")
     @PermissionCallback
-    private fun initialCameraPermsCallback(call: PluginCall) {
-        if (getPermissionState("camera") == PermissionState.GRANTED) {
-            notifyCameraPermissionGrantedToPlugins()
+    private fun onCameraPermissionResult(call: PluginCall) {
+        if (checkCameraPermission()) {
+            coreModule.switchToDesiredCameraState(lastFrameSourceState)
+            call.resolve()
+            return
         }
-        updateContext(call)
-    }
 
-    @Suppress("unused")
-    @PermissionCallback
-    private fun updateCameraPermsCallback(call: PluginCall) {
-        if (getPermissionState("camera") == PermissionState.GRANTED) {
-            notifyCameraPermissionGrantedToPlugins()
-        }
-        updateContext(call)
+        call.reject("Camera permissions not granted.")
     }
-
-    private fun notifyCameraPermissionGrantedToPlugins() =
-        plugins.filterIsInstance(CameraPermissionGrantedListener::class.java).forEach {
-            it.onCameraPermissionGranted()
-        }
 
     //region CameraProxy
     @PluginMethod
@@ -192,19 +172,27 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun switchCameraToDesiredState(call: PluginCall) {
-        val desiredStateJson = call.data.getString("desiredState") ?: return
-        coreModule.switchCameraToDesiredState(desiredStateJson, CapacitorResult(call))
+        val desiredStateJson = call.data.getString("desiredState") ?: run {
+            call.reject(
+                "Missing desiredState argument in switchCameraToDesiredState."
+            )
+            return
+        }
+
+        if (checkCameraPermission()) {
+            coreModule.switchCameraToDesiredState(desiredStateJson, CapacitorResult(call))
+            lastFrameSourceState = coreModule.getCurrentCameraDesiredState() ?: FrameSourceState.OFF
+            return
+        }
+
+        lastFrameSourceState = FrameSourceStateDeserializer.fromJson(desiredStateJson)
+        checkOrRequestCameraPermissions(call)
     }
     //endregion
 
     //region DataCaptureContextProxy
     @PluginMethod
     fun contextFromJSON(call: PluginCall) {
-        initializeContextFromJson(call)
-        checkOrRequestInitialCameraPermission(call)
-    }
-
-    private fun initializeContextFromJson(call: PluginCall) {
         val jsonString = call.data.getString("context")
             ?: return call.reject(EMPTY_STRING_ERROR)
         coreModule.createContextFromJson(jsonString, CapacitorResult(call))
@@ -220,9 +208,7 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun updateContextFromJSON(call: PluginCall) = checkOrRequestUpdateCameraPermission(call)
-
-    private fun updateContext(call: PluginCall) {
+    fun updateContextFromJSON(call: PluginCall) {
         val jsonString = call.data.getString("context")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
