@@ -40,7 +40,9 @@ public class ScanditCapacitorCore: CAPPlugin {
 
             if let oldValue = oldValue {
                 captureViewConstraints.captureView = nil
-                oldValue.removeFromSuperview()
+                if oldValue.superview != nil {
+                    oldValue.removeFromSuperview()
+                }
             }
 
             guard let captureView = captureView else {
@@ -54,15 +56,6 @@ public class ScanditCapacitorCore: CAPPlugin {
             captureViewConstraints.captureView = captureView
         }
     }
-
-    public static func registerModeDeserializer(_ modeDeserializer: DataCaptureModeDeserializer) {
-        Deserializers.Factory.add(modeDeserializer)
-    }
-
-    public static func unregisterModeDeserializer(_ modeDeserialzer: DataCaptureModeDeserializer) {
-        Deserializers.Factory.remove(modeDeserialzer)
-    }
-
 
     private static var contextListenersLock = os_unfair_lock()
     private static var contextListeners = NSMutableSet()
@@ -110,9 +103,6 @@ public class ScanditCapacitorCore: CAPPlugin {
                                 dataCaptureViewListener: viewListener)
         coreModule.didStart()
         DeserializationLifeCycleDispatcher.shared.attach(observer: self)
-        coreModule.registerDataCaptureContextListener()
-        coreModule.registerDataCaptureViewListener()
-        coreModule.registerFrameSourceListener()
     }
 
     @objc
@@ -148,6 +138,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(subscribeContextListener:)
     func subscribeContextListener(_ call: CAPPluginCall) {
+        self.coreModule.registerDataCaptureContextListener()
         call.resolve()
     }
 
@@ -159,6 +150,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(subscribeContextFrameListener:)
     func subscribeContextFrameListener(_ call: CAPPluginCall) {
+        self.coreModule.registerFrameSourceListener()
         call.resolve()
     }
 
@@ -178,6 +170,7 @@ public class ScanditCapacitorCore: CAPPlugin {
     func subscribeVolumeButtonObserver(_ call: CAPPluginCall) {
         volumeButtonObserver = VolumeButtonObserver(handler: { [weak self] in
             guard let self = self else {
+                call.resolve()
                 return
             }
             let event = ListenerEvent(name: .didChangeVolume)
@@ -281,7 +274,6 @@ public class ScanditCapacitorCore: CAPPlugin {
     @objc(getCurrentCameraState:)
     func getCurrentCameraState(_ call: CAPPluginCall) {
         guard let positionJson = call.getString("position") else {
-
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -363,7 +355,7 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
         coreModule.addModeToContext(modeJson: modeJson, result: CapacitorResult(call))
     }
-    
+
     @objc(removeModeFromContext:)
     func removeModeFromContext(_ call: CAPPluginCall) {
          guard let modeJson = call.getString("modeJson") else {
@@ -372,22 +364,34 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
         coreModule.removeModeFromContext(modeJson: modeJson, result: CapacitorResult(call))
     }
-    
+
     @objc(removeAllModes:)
     func removeAllModes(_ call: CAPPluginCall) {
         coreModule.removeAllModes(result: CapacitorResult(call))
     }
-    
+
     @objc(createDataCaptureView:)
     func createDataCaptureView(_ call: CAPPluginCall) {
         guard let viewJson = call.getString("viewJson") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-
-        _ = coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
+        dispatchMainSync {
+            captureView = coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
+        }
     }
-    
+
+    @objc(removeDataCaptureView:)
+    func removeDataCaptureView(_ call: CAPPluginCall) {
+        dispatchMainSync {
+            if let dcView = captureView {
+                coreModule.dataCaptureViewDisposed(dcView)
+            }
+            captureView = nil
+            call.resolve()
+        }
+    }
+
     @objc(updateDataCaptureView:)
     func updateDataCaptureView(_ call: CAPPluginCall) {
         guard let viewJson = call.getString("viewJson") else {
@@ -396,37 +400,14 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
         coreModule.updateDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
     }
-
-    @objc(addOverlay:)
-    func addOverlay(_ call: CAPPluginCall) {
-        guard let overlayJson = call.getString("overlayJson") else {
-            call.reject(CommandError.invalidJSON.toJSONString())
-            return
-        }
-        coreModule.addOverlayToView(overlayJson: overlayJson, result: CapacitorResult(call))
-    }
-
-    @objc(removeOverlay:)
-    func removeOverlay(_ call: CAPPluginCall) {
-        guard let overlayJson = call.getString("overlayJson") else {
-            call.reject(CommandError.invalidJSON.toJSONString())
-            return
-        }
-        coreModule.removeOverlayFromView(overlayJson: overlayJson, result: CapacitorResult(call))
-    }
-
-    @objc(removeAllOverlays:)
-    func removeAllOverlays(_ call: CAPPluginCall) {
-        coreModule.removeAllOverlays(result: CapacitorResult(call))
-    }
 }
 
 extension ScanditCapacitorCore: DeserializationLifeCycleObserver {
     public func dataCaptureContext(deserialized context: DataCaptureContext?) {
         self.context = context
     }
-
-    public func dataCaptureView(deserialized view: DataCaptureView?) {
-        captureView = view
+    
+    public func didDisposeDataCaptureContext() {
+        captureView = nil
     }
 }

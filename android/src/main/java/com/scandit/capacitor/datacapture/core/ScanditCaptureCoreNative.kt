@@ -2,20 +2,22 @@ package com.scandit.capacitor.datacapture.core
 
 import android.Manifest
 import android.util.Log
-import com.getcapacitor.*
+import com.getcapacitor.JSObject
+import com.getcapacitor.PermissionState
+import com.getcapacitor.Plugin
+import com.getcapacitor.PluginCall
+import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
 import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
-import com.scandit.capacitor.datacapture.core.errors.*
+import com.scandit.capacitor.datacapture.core.errors.JsonParseError
+import com.scandit.capacitor.datacapture.core.errors.NullFrameError
 import com.scandit.capacitor.datacapture.core.handlers.DataCaptureViewHandler
 import com.scandit.capacitor.datacapture.core.utils.CapacitorResult
 import com.scandit.datacapture.core.source.FrameSourceState
 import com.scandit.datacapture.core.source.FrameSourceStateDeserializer
-import com.scandit.datacapture.core.ui.DataCaptureView
 import com.scandit.datacapture.frameworks.core.CoreModule
-import com.scandit.datacapture.frameworks.core.deserialization.DefaultDeserializationLifecycleObserver
-import com.scandit.datacapture.frameworks.core.deserialization.DeserializationLifecycleObserver
 import com.scandit.datacapture.frameworks.core.events.Emitter
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureContextListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
@@ -36,7 +38,6 @@ import org.json.JSONObject
 )
 class ScanditCaptureCoreNative :
     Plugin(),
-    DeserializationLifecycleObserver.Observer,
     Emitter {
 
     companion object {
@@ -60,8 +61,6 @@ class ScanditCaptureCoreNative :
     )
     private val mainThread: MainThread = DefaultMainThread.getInstance()
     private val lastFrameData: LastFrameData = DefaultLastFrameData.getInstance()
-    private val deserializationLifecycleObserver: DeserializationLifecycleObserver =
-        DefaultDeserializationLifecycleObserver.getInstance()
 
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
@@ -91,7 +90,6 @@ class ScanditCaptureCoreNative :
 
         captureViewHandler.attachWebView(bridge.webView, bridge.activity)
         coreModule.onCreate(this.context)
-        deserializationLifecycleObserver.attach(this)
     }
 
     override fun handleOnStart() {
@@ -112,16 +110,7 @@ class ScanditCaptureCoreNative :
     }
 
     override fun handleOnDestroy() {
-        deserializationLifecycleObserver.detach(this)
         coreModule.onDestroy()
-    }
-
-    override fun onDataCaptureViewDeserialized(dataCaptureView: DataCaptureView?) {
-        if (dataCaptureView == null) {
-            captureViewHandler.disposeCurrentDataCaptureView()
-            return
-        }
-        captureViewHandler.attachDataCaptureView(dataCaptureView, this.activity)
     }
 
     private fun checkCameraPermission(): Boolean =
@@ -350,7 +339,20 @@ class ScanditCaptureCoreNative :
     fun createDataCaptureView(call: PluginCall) {
         val viewJson = call.data.getString("viewJson")
             ?: return call.reject(EMPTY_STRING_ERROR)
-        coreModule.createDataCaptureView(viewJson, CapacitorResult(call))
+        val view = coreModule.createDataCaptureView(viewJson, CapacitorResult(call))
+        if (view != null) {
+            captureViewHandler.attachDataCaptureView(view, this.activity)
+        }
+    }
+
+    @PluginMethod
+    fun removeDataCaptureView(call: PluginCall) {
+        val dcViewToRemove = captureViewHandler.dataCaptureView
+        if (dcViewToRemove != null) {
+            coreModule.dataCaptureViewDisposed(dcViewToRemove)
+        }
+        captureViewHandler.disposeCurrentDataCaptureView()
+        call.resolve()
     }
 
     @PluginMethod
@@ -358,25 +360,6 @@ class ScanditCaptureCoreNative :
         val viewJson = call.data.getString("viewJson")
             ?: return call.reject(EMPTY_STRING_ERROR)
         coreModule.updateDataCaptureView(viewJson, CapacitorResult(call))
-    }
-
-    @PluginMethod
-    fun addOverlay(call: PluginCall) {
-        val overlayJson = call.data.getString("overlayJson")
-            ?: return call.reject(EMPTY_STRING_ERROR)
-        coreModule.addOverlayToView(overlayJson, CapacitorResult(call))
-    }
-
-    @PluginMethod
-    fun removeOverlay(call: PluginCall) {
-        val overlayJson = call.data.getString("overlayJson")
-            ?: return call.reject(EMPTY_STRING_ERROR)
-        coreModule.removeOverlayFromView(overlayJson, CapacitorResult(call))
-    }
-
-    @PluginMethod
-    fun removeAllOverlays(call: PluginCall) {
-        coreModule.removeAllOverlays(CapacitorResult(call))
     }
 
     override fun emit(eventName: String, payload: MutableMap<String, Any?>) {

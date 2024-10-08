@@ -29,9 +29,7 @@ export declare enum CapacitorFunction {
     RemoveAllModesFromContext = "removeAllModesFromContext",
     CreateDataCaptureView = "createDataCaptureView",
     UpdateDataCaptureView = "updateDataCaptureView",
-    AddOverlay = "addOverlay",
-    RemoveOverlay = "removeOverlay",
-    RemoveAllOverlays = "removeAllOverlays"
+    RemoveDataCaptureView = "removeDataCaptureView"
 }
 export interface CapacitorWindow extends Window {
     Scandit: any;

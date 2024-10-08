@@ -38,7 +38,5 @@ CAP_PLUGIN(ScanditCapacitorCore, "ScanditCaptureCoreNative",
            CAP_PLUGIN_METHOD(removeModeFromContext, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(removeAllModesFromContext, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(createDataCaptureView, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(updateDataCaptureView, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(addOverlay, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(removeOverlay, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(removeAllOverlays, CAPPluginReturnPromise);)
+           CAP_PLUGIN_METHOD(removeDataCaptureView, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(updateDataCaptureView, CAPPluginReturnPromise);)

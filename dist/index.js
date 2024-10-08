@@ -149,19 +149,24 @@ class DataCaptureView {
             setTimeout(this.elementDidChange.bind(this), 300);
             setTimeout(this.elementDidChange.bind(this), 1000);
         });
-        this.baseDataCaptureView = new BaseDataCaptureView();
+        this.baseDataCaptureView = new BaseDataCaptureView(false);
     }
     connectToElement(element) {
-        this.htmlElement = element;
-        this.htmlElementState = new HTMLElementState();
-        // Initial update
-        this.elementDidChange();
-        this.subscribeToChangesOnHTMLElement();
+        // add view to native hierarchy
+        this.baseDataCaptureView.createNativeView().then(() => {
+            this.htmlElement = element;
+            this.htmlElementState = new HTMLElementState();
+            // Initial update
+            this.elementDidChange();
+            this.subscribeToChangesOnHTMLElement();
+        });
     }
     detachFromElement() {
         this.unsubscribeFromChangesOnHTMLElement();
         this.htmlElement = null;
         this.elementDidChange();
+        // Remove view from native hierarchy
+        this.baseDataCaptureView.removeNativeView();
     }
     setFrame(frame, isUnderContent = false) {
         return this.baseDataCaptureView.setFrame(frame, isUnderContent);
@@ -266,7 +271,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '6.27.2';
+        return '6.28.0';
     }
 }
 
@@ -361,9 +366,7 @@ var CapacitorFunction;
     CapacitorFunction["RemoveAllModesFromContext"] = "removeAllModesFromContext";
     CapacitorFunction["CreateDataCaptureView"] = "createDataCaptureView";
     CapacitorFunction["UpdateDataCaptureView"] = "updateDataCaptureView";
-    CapacitorFunction["AddOverlay"] = "addOverlay";
-    CapacitorFunction["RemoveOverlay"] = "removeOverlay";
-    CapacitorFunction["RemoveAllOverlays"] = "removeAllOverlays";
+    CapacitorFunction["RemoveDataCaptureView"] = "removeDataCaptureView";
 })(CapacitorFunction || (CapacitorFunction = {}));
 const pluginName = 'ScanditCaptureCoreNative';
 // tslint:disable-next-line:variable-name
@@ -1216,18 +1219,8 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
             viewJson: viewJson,
         });
     }
-    addOverlay(overlayJson) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.AddOverlay]({
-            overlayJson: overlayJson,
-        });
-    }
-    removeOverlay(overlayJson) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveOverlay]({
-            overlayJson: overlayJson,
-        });
-    }
-    removeAllOverlays() {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveAllOverlays]();
+    removeView() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveDataCaptureView]();
     }
     registerListenerForViewEvents() {
         window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeViewListener]();

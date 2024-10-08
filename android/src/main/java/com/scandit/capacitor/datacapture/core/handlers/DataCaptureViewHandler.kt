@@ -30,6 +30,9 @@ class DataCaptureViewHandler(
     private val webView: View?
         get() = webViewReference.get()
 
+    val dataCaptureView: DataCaptureView?
+        get() = dataCaptureViewReference.get()
+
     fun attachDataCaptureView(dataCaptureView: DataCaptureView, activity: AppCompatActivity) {
         if (this.dataCaptureViewReference.get() != dataCaptureView) {
             disposeCurrentDataCaptureView()
