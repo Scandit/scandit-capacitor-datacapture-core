@@ -3,20 +3,6 @@ import { DataCaptureContext, Control, DataCaptureOverlay } from 'scandit-datacap
 import { FocusGesture, LogoStyle, ZoomGesture } from 'scandit-datacapture-frameworks-core';
 import { DataCaptureViewListener } from 'scandit-datacapture-frameworks-core';
 import { Optional } from '../definitions';
-export declare class HTMLElementState {
-    isShown: boolean;
-    position: Optional<{
-        top: number;
-        left: number;
-    }>;
-    size: Optional<{
-        width: number;
-        height: number;
-    }>;
-    shouldBeUnderContent: boolean;
-    get isValid(): boolean;
-    didChangeComparedTo(other: HTMLElementState): boolean;
-}
 export declare class DataCaptureView {
     private baseDataCaptureView;
     private get overlays();
