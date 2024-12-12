@@ -12,6 +12,7 @@ import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
 import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
 import com.scandit.capacitor.datacapture.core.errors.JsonParseError
+import com.scandit.capacitor.datacapture.core.errors.NullFrameError
 import com.scandit.capacitor.datacapture.core.handlers.DataCaptureViewHandler
 import com.scandit.capacitor.datacapture.core.utils.CapacitorResult
 import com.scandit.datacapture.core.source.FrameSourceState
@@ -22,7 +23,9 @@ import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureCo
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceListener
+import com.scandit.datacapture.frameworks.core.utils.DefaultLastFrameData
 import com.scandit.datacapture.frameworks.core.utils.DefaultMainThread
+import com.scandit.datacapture.frameworks.core.utils.LastFrameData
 import com.scandit.datacapture.frameworks.core.utils.MainThread
 import org.json.JSONException
 import org.json.JSONObject
@@ -57,6 +60,8 @@ class ScanditCaptureCoreNative :
         FrameworksFrameSourceDeserializer(frameSourceListener)
     )
     private val mainThread: MainThread = DefaultMainThread.getInstance()
+    private val lastFrameData: LastFrameData = DefaultLastFrameData.getInstance()
+
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
     private val plugins = mutableListOf<Plugin>()
@@ -286,9 +291,21 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun getFrame(call: PluginCall) {
-        val frameId = call.data.getString("frameId") ?: return call.reject(EMPTY_STRING_ERROR)
-        coreModule.getLastFrameAsJson(frameId, CapacitorResult(call))
+    fun getLastFrame(call: PluginCall) {
+        lastFrameData.getLastFrameDataJson {
+            if (it == null) {
+                call.reject(NullFrameError().serializeContent().toString())
+                return@getLastFrameDataJson
+            }
+            CapacitorResult(call).success(it)
+        }
+    }
+
+    @PluginMethod
+    fun getLastFrameOrNull(call: PluginCall) {
+        lastFrameData.getLastFrameDataJson {
+            CapacitorResult(call).success(it)
+        }
     }
 
     @PluginMethod
@@ -351,9 +368,4 @@ class ScanditCaptureCoreNative :
     }
 
     override fun hasListenersForEvent(eventName: String): Boolean = this.hasListeners(eventName)
-
-    @PluginMethod
-    fun getOpenSourceSoftwareLicenseInfo(call: PluginCall) {
-        coreModule.getOpenSourceSoftwareLicenseInfo(CapacitorResult(call))
-    }
 }
