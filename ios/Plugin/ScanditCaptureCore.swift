@@ -74,6 +74,15 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
     }
 
+    public static var lastFrame: FrameData? {
+        get {
+            LastFrameData.shared.frameData
+        }
+        set {
+            LastFrameData.shared.frameData = newValue
+        }
+    }
+
     private var volumeButtonObserver: VolumeButtonObserver?
 
     private lazy var captureViewConstraints = DataCaptureViewConstraints(relativeTo: webView!)
@@ -320,14 +329,22 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.emitFeedback(json: feedbackJson, result: CapacitorResult(call))
     }
 
-    @objc(getFrame:)
-    func getFrame(_ call: CAPPluginCall) {
-        guard let frameId = call.getString("frameId") else {
-            call.reject(CommandError.invalidJSON.toJSONString())
+    @objc(getLastFrame:)
+    func getLastFrame(_ call: CAPPluginCall) {
+        guard let lastFrame = LastFrameData.shared.frameData else {
+            call.reject(CommandError.noFrameData.toJSONString())
             return
         }
-        
-        coreModule.getLastFrameAsJson(frameId: frameId, result: CapacitorResult(call))
+        call.resolve([
+            "data": lastFrame.jsonString
+        ])
+    }
+
+    @objc(getLastFrameOrNull:)
+    func getLastFrameOrNull(_ call: CAPPluginCall) {
+        call.resolve([
+            "data": LastFrameData.shared.frameData?.jsonString ?? "",
+        ])
     }
 
     @objc(addModeToContext:)
@@ -382,11 +399,6 @@ public class ScanditCapacitorCore: CAPPlugin {
             return
         }
         coreModule.updateDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
-    }
-
-    @objc(getOpenSourceSoftwareLicenseInfo:)
-    func getOpenSourceSoftwareLicenseInfo(_ call: CAPPluginCall) {
-        coreModule.getOpenSourceSoftwareLicenseInfo(result: CapacitorResult(call))
     }
 }
 
