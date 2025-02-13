@@ -19,7 +19,8 @@ export declare enum CapacitorFunction {
     RegisterListenerForCameraEvents = "registerListenerForCameraEvents",
     UnregisterListenerForCameraEvents = "unregisterListenerForCameraEvents",
     SwitchCameraToDesiredState = "switchCameraToDesiredState",
-    GetFrame = "getFrame",
+    GetLastFrame = "getLastFrame",
+    GetLastFrameOrNull = "getLastFrameOrNull",
     EmitFeedback = "emitFeedback",
     SubscribeVolumeButtonObserver = "subscribeVolumeButtonObserver",
     UnsubscribeVolumeButtonObserver = "unsubscribeVolumeButtonObserver",
@@ -28,8 +29,7 @@ export declare enum CapacitorFunction {
     RemoveAllModesFromContext = "removeAllModesFromContext",
     CreateDataCaptureView = "createDataCaptureView",
     UpdateDataCaptureView = "updateDataCaptureView",
-    RemoveDataCaptureView = "removeDataCaptureView",
-    GetOpenSourceSoftwareLicenseInfo = "getOpenSourceSoftwareLicenseInfo"
+    RemoveDataCaptureView = "removeDataCaptureView"
 }
 export interface CapacitorWindow extends Window {
     Scandit: any;
