@@ -1,6 +1,6 @@
 {
   "name": "scandit-capacitor-datacapture-core",
-  "version": "7.1.2",
+  "version": "7.1.3",
   "description": "Scandit Data Capture SDK for Capacitor",
   "license": "Apache-2.0",
   "private": false,
@@ -69,6 +69,6 @@
   "prettier": "@ionic/prettier-config",
   "dependencies": {
     "@capacitor/cli": "^4.3.0",
-    "scandit-datacapture-frameworks-core": "7.1.2"
+    "scandit-datacapture-frameworks-core": "7.1.3"
   }
 }
