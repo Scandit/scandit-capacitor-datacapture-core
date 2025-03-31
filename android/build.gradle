@@ -9,10 +9,37 @@ def safeExtGet(prop, fallback) {
 }
 
 buildscript {
+    def retrieveCapacitorCompatibility = {
+        def file = project(":app").file("capacitor.build.gradle")
+        if (file.exists()) {
+            def content = file.text
+
+            def sourceCompatibilityMatch = content =~ /sourceCompatibility\s+JavaVersion.VERSION_(\d+)/
+            def targetCompatibilityMatch = content =~ /targetCompatibility\s+JavaVersion.VERSION_(\d+)/
+
+            if (sourceCompatibilityMatch) {
+                ext.rootSourceCompatibility = JavaVersion.toVersion(sourceCompatibilityMatch[0][1])
+            } else {
+                ext.rootSourceCompatibility = JavaVersion.VERSION_17
+            }
+
+            if (targetCompatibilityMatch) {
+                ext.rootTargetCompatibility = JavaVersion.toVersion(targetCompatibilityMatch[0][1])
+            } else {
+                ext.rootTargetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+
     ext {
         kotlin_version = "1.8.20"
         agp_version = "8.5.1"
+        rootSourceCompatibility = JavaVersion.VERSION_17
+        rootTargetCompatibility = JavaVersion.VERSION_17
     }
+
+    retrieveCapacitorCompatibility()
+
     repositories {
         google()
         mavenCentral()
@@ -45,8 +72,8 @@ android {
         abortOnError false
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = rootSourceCompatibility
+        targetCompatibility = rootTargetCompatibility
     }
 }
 
@@ -56,7 +83,7 @@ repositories {
 }
 
 dependencies {
-    def sdk_version = "7.1.3"
+    def sdk_version = "7.2.0"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 

@@ -18,6 +18,8 @@ import com.scandit.datacapture.core.source.FrameSourceState
 import com.scandit.datacapture.core.source.FrameSourceStateDeserializer
 import com.scandit.datacapture.frameworks.core.CoreModule
 import com.scandit.datacapture.frameworks.core.events.Emitter
+import com.scandit.datacapture.frameworks.core.lifecycle.ActivityLifecycleDispatcher
+import com.scandit.datacapture.frameworks.core.lifecycle.DefaultActivityLifecycle
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureContextListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
@@ -45,7 +47,8 @@ class ScanditCaptureCoreNative :
             "ScanditTextNative"
         )
     }
-
+    private val lifecycleDispatcher: ActivityLifecycleDispatcher =
+        DefaultActivityLifecycle.getInstance()
     private val captureViewHandler = DataCaptureViewHandler()
     private val frameSourceListener = FrameworksFrameSourceListener(this)
     private val coreModule = CoreModule(
@@ -91,9 +94,11 @@ class ScanditCaptureCoreNative :
         coreModule.registerDataCaptureContextListener()
         coreModule.registerDataCaptureViewListener()
         coreModule.registerFrameSourceListener()
+        lifecycleDispatcher.dispatchOnStart()
     }
 
     override fun handleOnStop() {
+        lifecycleDispatcher.dispatchOnStop()
         lastFrameSourceState = coreModule.getCurrentCameraDesiredState() ?: FrameSourceState.OFF
         coreModule.switchToDesiredCameraState(FrameSourceState.OFF)
         coreModule.unregisterDataCaptureContextListener()
@@ -102,8 +107,17 @@ class ScanditCaptureCoreNative :
     }
 
     override fun handleOnDestroy() {
+        lifecycleDispatcher.dispatchOnDestroy()
         coreModule.onDestroy()
         captureViewHandler.disposeCurrentWebView()
+    }
+
+    override fun handleOnResume() {
+        lifecycleDispatcher.dispatchOnResume()
+    }
+
+    override fun handleOnPause() {
+        lifecycleDispatcher.dispatchOnPause()
     }
 
     private fun checkCameraPermission(): Boolean =

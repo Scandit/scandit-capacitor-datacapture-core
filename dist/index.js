@@ -255,7 +255,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '7.1.3';
+        return '7.2.0';
     }
 }
 
@@ -386,6 +386,9 @@ class CapacitorNativeCaller {
         return __awaiter(this, void 0, void 0, function* () {
             yield subscription.remove();
         });
+    }
+    eventHook(ev) {
+        return ev;
     }
 }
 new CapacitorNativeCaller(Capacitor$1.pluginName);

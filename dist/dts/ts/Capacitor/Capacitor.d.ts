@@ -50,5 +50,6 @@ export declare class CapacitorNativeCaller implements NativeCaller {
     callFn(fnName: string, args: object | undefined | null): Promise<any>;
     registerEvent(evName: string, handler: (args: any) => Promise<void>): Promise<any>;
     unregisterEvent(_evName: string, subscription: any): Promise<void>;
+    eventHook(ev: any): any;
 }
 export declare const capacitorCoreNativeCaller: CapacitorNativeCaller;
