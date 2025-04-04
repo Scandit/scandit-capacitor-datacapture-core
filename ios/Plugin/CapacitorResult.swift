@@ -15,18 +15,10 @@ public struct CapacitorResult: FrameworksResult {
     }
 
     public func success(result: Any?) {
-        if let resultDict = result as? [String: Any] {
-            do {
-                let jsonData = try JSONSerialization.data(withJSONObject: resultDict, options: [])
-                if let jsonString = String(data: jsonData, encoding: .utf8) {
-                    pluginCall.resolve(["data": jsonString])
-                }
-            } catch {
-                reject(code: "JSON_ERROR", message: "Failed to convert to JSON", details: error)
-            }
-        } else if let unwrappedResult = result {
-            let resultAsString = String(describing: unwrappedResult)
-            pluginCall.resolve(["data": resultAsString])
+        if let result = result as? [String: Any] {
+            pluginCall.resolve(result)
+        } else if let result = result {
+            pluginCall.resolve(["data": result])
         } else {
             pluginCall.resolve()
         }
