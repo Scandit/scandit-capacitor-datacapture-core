@@ -12,9 +12,9 @@ Pod::Spec.new do |s|
   s.author                 = package["author"]
   s.source                 = { :git => package["homepage"], :tag => s.version.to_s }
   s.source_files           = "ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}"
-  s.ios.deployment_target  = "13.0"
+  s.ios.deployment_target  = "14.0"
   s.swift_version          = "5.7"
 
   s.dependency "Capacitor"
-  s.dependency "scandit-datacapture-frameworks-core", '= 6.28.5'
+  s.dependency "scandit-datacapture-frameworks-core", '= 7.2.1'
 end

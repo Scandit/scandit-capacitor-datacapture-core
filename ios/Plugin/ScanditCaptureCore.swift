@@ -21,19 +21,6 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     private var coreModule: CoreModule!
 
-    public var context: DataCaptureContext? {
-        didSet {
-            Self.context = context
-            os_unfair_lock_lock(&Self.contextListenersLock)
-            defer { os_unfair_lock_unlock(&Self.contextListenersLock) }
-            Self.contextListeners.compactMap { $0 as? ContextChangeListener }.forEach {
-                $0.context(didChange: context)
-            }
-        }
-    }
-
-    private static var context: DataCaptureContext?
-
     var captureView: DataCaptureView? {
         didSet {
             guard oldValue != captureView else { return }
@@ -54,32 +41,6 @@ public class ScanditCapacitorCore: CAPPlugin {
 
             webView?.addSubview(captureView)
             captureViewConstraints.captureView = captureView
-        }
-    }
-
-    private static var contextListenersLock = os_unfair_lock()
-    private static var contextListeners = NSMutableSet()
-
-    public static func registerContextChangeListener(listener: ContextChangeListener) {
-        if Self.contextListeners.contains(listener) {
-            return
-        }
-        Self.contextListeners.add(listener)
-        listener.context(didChange: context)
-    }
-
-    public static func unregisterContextChangeListener(listener: ContextChangeListener) {
-        if Self.contextListeners.contains(listener) {
-            Self.contextListeners.remove(listener)
-        }
-    }
-
-    public static var lastFrame: FrameData? {
-        get {
-            LastFrameData.shared.frameData
-        }
-        set {
-            LastFrameData.shared.frameData = newValue
         }
     }
 
@@ -197,7 +158,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(setViewPositionAndSize:)
     func setViewPositionAndSize(_ call: CAPPluginCall) {
-        dispatchMainSync {
+        dispatchMain {
             let jsonObject = call.getObject("position")
             guard let viewPositionAndSizeJSON = try? ViewPositionAndSizeJSON.fromJSONObject(jsonObject as Any) else {
                 call.reject(CommandError.invalidJSON.toJSONString())
@@ -223,7 +184,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(showView:)
     func showView(_ call: CAPPluginCall) {
-        dispatchMainSync {
+        dispatchMain {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeShown.toJSONString())
                 return
@@ -237,7 +198,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(hideView:)
     func hideView(_ call: CAPPluginCall) {
-        dispatchMainSync {
+        dispatchMain {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeHidden.toJSONString())
                 return
@@ -329,22 +290,14 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.emitFeedback(json: feedbackJson, result: CapacitorResult(call))
     }
 
-    @objc(getLastFrame:)
-    func getLastFrame(_ call: CAPPluginCall) {
-        guard let lastFrame = LastFrameData.shared.frameData else {
-            call.reject(CommandError.noFrameData.toJSONString())
+    @objc(getFrame:)
+    func getFrame(_ call: CAPPluginCall) {
+        guard let frameId = call.getString("frameId") else {
+            call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        call.resolve([
-            "data": lastFrame.jsonString
-        ])
-    }
 
-    @objc(getLastFrameOrNull:)
-    func getLastFrameOrNull(_ call: CAPPluginCall) {
-        call.resolve([
-            "data": LastFrameData.shared.frameData?.jsonString ?? "",
-        ])
+        coreModule.getLastFrameAsJson(frameId: frameId, result: CapacitorResult(call))
     }
 
     @objc(addModeToContext:)
@@ -376,18 +329,18 @@ public class ScanditCapacitorCore: CAPPlugin {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        dispatchMainSync {
-            captureView = coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
+        dispatchMain {
+            self.captureView = self.coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
         }
     }
 
     @objc(removeDataCaptureView:)
     func removeDataCaptureView(_ call: CAPPluginCall) {
-        dispatchMainSync {
-            if let dcView = captureView {
-                coreModule.dataCaptureViewDisposed(dcView)
+        dispatchMain {
+            if let dcView = self.captureView {
+                self.coreModule.dataCaptureViewDisposed(dcView)
             }
-            captureView = nil
+            self.captureView = nil
             call.resolve()
         }
     }
@@ -400,13 +353,14 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
         coreModule.updateDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
     }
+
+    @objc(getOpenSourceSoftwareLicenseInfo:)
+    func getOpenSourceSoftwareLicenseInfo(_ call: CAPPluginCall) {
+        coreModule.getOpenSourceSoftwareLicenseInfo(result: CapacitorResult(call))
+    }
 }
 
 extension ScanditCapacitorCore: DeserializationLifeCycleObserver {
-    public func dataCaptureContext(deserialized context: DataCaptureContext?) {
-        self.context = context
-    }
-    
     public func didDisposeDataCaptureContext() {
         captureView = nil
     }
