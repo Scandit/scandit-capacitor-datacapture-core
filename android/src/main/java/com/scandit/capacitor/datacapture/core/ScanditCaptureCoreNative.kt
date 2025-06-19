@@ -20,10 +20,6 @@ import com.scandit.datacapture.frameworks.core.CoreModule
 import com.scandit.datacapture.frameworks.core.events.Emitter
 import com.scandit.datacapture.frameworks.core.lifecycle.ActivityLifecycleDispatcher
 import com.scandit.datacapture.frameworks.core.lifecycle.DefaultActivityLifecycle
-import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureContextListener
-import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
-import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
-import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceListener
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -47,16 +43,11 @@ class ScanditCaptureCoreNative :
             "ScanditTextNative"
         )
     }
+
     private val lifecycleDispatcher: ActivityLifecycleDispatcher =
         DefaultActivityLifecycle.getInstance()
     private val captureViewHandler = DataCaptureViewHandler()
-    private val frameSourceListener = FrameworksFrameSourceListener(this)
-    private val coreModule = CoreModule(
-        frameSourceListener,
-        FrameworksDataCaptureContextListener(this),
-        FrameworksDataCaptureViewListener(this),
-        FrameworksFrameSourceDeserializer(frameSourceListener)
-    )
+    private val coreModule = CoreModule.create(this)
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
     private val plugins = mutableListOf<Plugin>()
@@ -92,7 +83,7 @@ class ScanditCaptureCoreNative :
             coreModule.switchToDesiredCameraState(lastFrameSourceState)
         }
         coreModule.registerDataCaptureContextListener()
-        coreModule.registerDataCaptureViewListener()
+        coreModule.registerTopmostDataCaptureViewListener()
         coreModule.registerFrameSourceListener()
         lifecycleDispatcher.dispatchOnStart()
     }
@@ -102,7 +93,7 @@ class ScanditCaptureCoreNative :
         lastFrameSourceState = coreModule.getCurrentCameraDesiredState() ?: FrameSourceState.OFF
         coreModule.switchToDesiredCameraState(FrameSourceState.OFF)
         coreModule.unregisterDataCaptureContextListener()
-        coreModule.unregisterDataCaptureViewListener()
+        coreModule.unregisterTopmostDataCaptureViewListener()
         coreModule.unregisterFrameSourceListener()
     }
 
@@ -246,15 +237,23 @@ class ScanditCaptureCoreNative :
         val pointJson = call.data.getString("point")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
-        coreModule.viewPointForFramePoint(pointJson, CapacitorResult(call))
+        val viewId = call.data.getInt("viewId")
+
+        coreModule.viewPointForFramePoint(viewId, pointJson, CapacitorResult(call))
     }
 
     @PluginMethod
     fun viewQuadrilateralForFrameQuadrilateral(call: PluginCall) {
-        val pointJson = call.data.getString("point")
+        val quadrilateralJson = call.data.getString("quadrilateral")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
-        coreModule.viewQuadrilateralForFrameQuadrilateral(pointJson, CapacitorResult(call))
+        val viewId = call.data.getInt("viewId")
+
+        coreModule.viewQuadrilateralForFrameQuadrilateral(
+            viewId,
+            quadrilateralJson,
+            CapacitorResult(call)
+        )
     }
     //endregion
 
@@ -287,13 +286,15 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun subscribeViewListener(call: PluginCall) {
-        coreModule.registerDataCaptureViewListener()
+        val viewId = call.data.getInt("viewId")
+        coreModule.registerDataCaptureViewListener(viewId)
         call.resolve()
     }
 
     @PluginMethod
     fun unsubscribeViewListener(call: PluginCall) {
-        coreModule.unregisterDataCaptureViewListener()
+        val viewId = call.data.getInt("viewId")
+        coreModule.unregisterDataCaptureViewListener(viewId)
         call.resolve()
     }
 
@@ -349,9 +350,10 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun removeDataCaptureView(call: PluginCall) {
+        val viewId = call.data.getInt("viewId")
         // In capacitor we just show 1 datacapture view at a time
-        val dcViewToRemove = captureViewHandler.dataCaptureView
-        if (dcViewToRemove != null) {
+        val dcViewToRemove = coreModule.getDataCaptureViewById(viewId)
+        dcViewToRemove?.post {
             coreModule.dataCaptureViewDisposed(dcViewToRemove)
             captureViewHandler.removeDataCaptureView(dcViewToRemove)
         }
