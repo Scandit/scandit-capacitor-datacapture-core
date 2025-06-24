@@ -1,5 +1,5 @@
 import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureContextEvents, DataCaptureViewEvents, FactoryMaker, FrameSourceListenerEvents, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource, OpenSourceSoftwareLicenseInfo } from './core.js';
-export { ContextStatus, ImageBuffer, LaserlineViewfinder, LogoStyle, ScanIntention } from './core.js';
+export { ContextStatus, ImageBuffer, LogoStyle, ScanIntention } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -133,9 +133,8 @@ class DataCaptureView {
         this.baseDataCaptureView = new BaseDataCaptureView(false);
     }
     connectToElement(element) {
-        const viewId = (Date.now() / 1000) | 0;
         // add view to native hierarchy
-        this.baseDataCaptureView.createNativeView(viewId).then(() => {
+        this.baseDataCaptureView.createNativeView().then(() => {
             this.htmlElement = element;
             this.htmlElementState = new HTMLElementState();
             // Initial update
@@ -152,8 +151,7 @@ class DataCaptureView {
     }
     setFrame(frame, isUnderContent = false) {
         return __awaiter(this, void 0, void 0, function* () {
-            const viewId = (Date.now() / 1000) | 0;
-            yield this.baseDataCaptureView.createNativeView(viewId);
+            yield this.baseDataCaptureView.createNativeView();
             return this.baseDataCaptureView.setFrame(frame, isUnderContent);
         });
     }
@@ -257,7 +255,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '7.4.0';
+        return '7.2.3';
     }
 }
 
@@ -1197,16 +1195,14 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
     hide() {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.HideView]();
     }
-    viewPointForFramePoint({ viewId, pointJson }) {
+    viewPointForFramePoint(pointJson) {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.ViewPointForFramePoint]({
-            viewId: viewId,
             point: pointJson,
         });
     }
-    viewQuadrilateralForFrameQuadrilateral({ viewId, quadrilateralJson }) {
+    viewQuadrilateralForFrameQuadrilateral(quadrilateralJson) {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.ViewQuadrilateralForFrameQuadrilateral]({
-            viewId: viewId,
-            quadrilateral: quadrilateralJson,
+            point: quadrilateralJson,
         });
     }
     createView(viewJson) {
@@ -1219,20 +1215,14 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
             viewJson: viewJson,
         });
     }
-    removeView(viewId) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveDataCaptureView]({
-            viewId: viewId,
-        });
+    removeView() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveDataCaptureView]();
     }
-    registerListenerForViewEvents(viewId) {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeViewListener]({
-            viewId: viewId,
-        });
+    registerListenerForViewEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeViewListener]();
     }
-    unregisterListenerForViewEvents(viewId) {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeViewListener]({
-            viewId: viewId,
-        });
+    unregisterListenerForViewEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeViewListener]();
     }
     subscribeDidChangeSize() {
         window.Capacitor.Plugins[Capacitor$1.pluginName]
