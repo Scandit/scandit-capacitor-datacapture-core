@@ -51,17 +51,7 @@ public class ScanditCapacitorCore: CAPPlugin {
     public override func load() {
         super.load()
         let emitter = CapacitorEventEmitter(with: self)
-        let frameSourceListener = FrameworksFrameSourceListener(eventEmitter: emitter)
-        let framesourceDeserializer = FrameworksFrameSourceDeserializer(
-            frameSourceListener: frameSourceListener,
-            torchListener: frameSourceListener
-        )
-        let contextDeserializer = FrameworksDataCaptureContextListener(eventEmitter: emitter)
-        let viewListener = FrameworksDataCaptureViewListener(eventEmitter: emitter)
-        coreModule = CoreModule(frameSourceDeserializer: framesourceDeserializer,
-                                frameSourceListener: frameSourceListener,
-                                dataCaptureContextListener: contextDeserializer,
-                                dataCaptureViewListener: viewListener)
+        coreModule = CoreModule.create(emitter: emitter)
         coreModule.didStart()
         DeserializationLifeCycleDispatcher.shared.attach(observer: self)
     }
@@ -71,7 +61,7 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.didStop()
         DeserializationLifeCycleDispatcher.shared.detach(observer: self)
         coreModule.unregisterDataCaptureContextListener()
-        coreModule.unregisterDataCaptureViewListener()
+        coreModule.unregisterTopmostDataCaptureViewListener()
         coreModule.unregisterFrameSourceListener()
     }
 
@@ -117,13 +107,23 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(subscribeViewListener:)
     func subscribeViewListener(_ call: CAPPluginCall) {
-        self.coreModule.registerDataCaptureViewListener()
+        guard let viewId = call.getInt("viewId") else {
+            call.reject(CommandError.noViewIdParameter.toJSONString())
+            return
+        }
+            
+        self.coreModule.registerDataCaptureViewListener(viewId: viewId)
+        
         call.resolve()
     }
 
     @objc(unsubscribeViewListener:)
     func unsubscribeViewListener(_ call: CAPPluginCall) {
-        self.coreModule.unregisterDataCaptureViewListener()
+        guard let viewId = call.getInt("viewId") else {
+            call.reject(CommandError.noViewIdParameter.toJSONString())
+            return
+        }
+        self.coreModule.unregisterDataCaptureViewListener(viewId: viewId)
         call.resolve()
     }
 
@@ -218,16 +218,24 @@ public class ScanditCapacitorCore: CAPPlugin {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        coreModule.viewPointForFramePoint(json: jsonString, result: CapacitorResult(call))
+        guard let viewId = call.getInt("viewId") else {
+            call.reject(CommandError.noViewIdParameter.toJSONString())
+            return
+        }
+        coreModule.viewPointForFramePoint(viewId: viewId, json: jsonString, result: CapacitorResult(call))
     }
 
     @objc(viewQuadrilateralForFrameQuadrilateral:)
     func viewQuadrilateralForFrameQuadrilateral(_ call: CAPPluginCall) {
-        guard let jsonString = call.getValue("point") as? String else {
+        guard let jsonString = call.getValue("quadrilateral") as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        coreModule.viewQuadrilateralForFrameQuadrilateral(json: jsonString, result: CapacitorResult(call))
+        guard let viewId = call.getInt("viewId") else {
+            call.reject(CommandError.noViewIdParameter.toJSONString())
+            return
+        }
+        coreModule.viewQuadrilateralForFrameQuadrilateral(viewId: viewId, json: jsonString, result: CapacitorResult(call))
     }
 
     // MARK: - CameraProxy
