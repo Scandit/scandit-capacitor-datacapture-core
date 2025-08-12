@@ -30,4 +30,8 @@ public struct CapacitorEventEmitter: Emitter {
     public func hasListener(for event: String) -> Bool {
         plugin?.hasListeners(event) ?? false
     }
+    
+    public func hasViewSpecificListenersForEvent(_ viewId: Int, for event: String) -> Bool {
+        plugin?.hasListeners(event) ?? false
+    }
 }
