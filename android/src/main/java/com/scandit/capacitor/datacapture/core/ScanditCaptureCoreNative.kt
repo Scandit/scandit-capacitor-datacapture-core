@@ -35,6 +35,8 @@ class ScanditCaptureCoreNative :
 
     companion object {
         private const val EMPTY_STRING_ERROR = "Empty strings are not allowed."
+        private fun missingParameter(parameterName: String) =
+            "Missing parameter '$parameterName' in call."
 
         private val SCANDIT_PLUGINS = listOf(
             "ScanditBarcodeNative",
@@ -136,12 +138,20 @@ class ScanditCaptureCoreNative :
 
     //region CameraProxy
     @PluginMethod
-    fun getCurrentCameraState(call: PluginCall) =
-        coreModule.getCurrentCameraState(CapacitorResult(call))
+    fun getCurrentCameraState(call: PluginCall) {
+        val positionJson = call.data.getString("position") ?: run {
+            call.reject(missingParameter("position"))
+            return
+        }
+        coreModule.getCameraState(positionJson, CapacitorResult(call))
+    }
 
     @PluginMethod
-    fun getIsTorchAvailable(call: PluginCall) {
-        val positionJson = call.data.getString("position") ?: return
+    fun isTorchAvailable(call: PluginCall) {
+        val positionJson = call.data.getString("position") ?: run {
+            call.reject(missingParameter("position"))
+            return
+        }
         coreModule.isTorchAvailable(positionJson, CapacitorResult(call))
     }
 
@@ -159,10 +169,8 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun switchCameraToDesiredState(call: PluginCall) {
-        val desiredStateJson = call.data.getString("desiredState") ?: run {
-            call.reject(
-                "Missing desiredState argument in switchCameraToDesiredState."
-            )
+        val desiredStateJson = call.data.getString("desiredStateJson") ?: run {
+            call.reject(missingParameter("desiredStateJson"))
             return
         }
 
@@ -180,7 +188,7 @@ class ScanditCaptureCoreNative :
     //region DataCaptureContextProxy
     @PluginMethod
     fun contextFromJSON(call: PluginCall) {
-        val jsonString = call.data.getString("context")
+        val jsonString = call.data.getString("contextJson")
             ?: return call.reject(EMPTY_STRING_ERROR)
         coreModule.createContextFromJson(jsonString, CapacitorResult(call))
     }
@@ -196,7 +204,7 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun updateContextFromJSON(call: PluginCall) {
-        val jsonString = call.data.getString("context")
+        val jsonString = call.data.getString("contextJson")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
         activity.runOnUiThread {
@@ -300,7 +308,10 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun getFrame(call: PluginCall) {
-        val frameId = call.data.getString("frameId") ?: return call.reject(EMPTY_STRING_ERROR)
+        val frameId = call.data.getString("frameId") ?: run {
+            call.reject(missingParameter("frameId"))
+            return
+        }
         coreModule.getLastFrameAsJson(frameId, CapacitorResult(call))
     }
 
@@ -327,7 +338,7 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun removeAllModesFromContext(call: PluginCall) {
+    fun removeAllModes(call: PluginCall) {
         coreModule.removeAllModes(CapacitorResult(call))
     }
 
