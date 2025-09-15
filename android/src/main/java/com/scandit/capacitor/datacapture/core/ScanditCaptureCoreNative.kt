@@ -355,7 +355,9 @@ class ScanditCaptureCoreNative :
                 captureViewHandler.removeDataCaptureView(existingView)
             }
 
-            captureViewHandler.addDataCaptureView(view, this.activity)
+            activity.runOnUiThread {
+                captureViewHandler.addDataCaptureView(view, this.activity)
+            }
         }
     }
 

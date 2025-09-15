@@ -130,7 +130,7 @@ class DataCaptureView {
             setTimeout(this.elementDidChange.bind(this), 300);
             setTimeout(this.elementDidChange.bind(this), 1000);
         });
-        this.baseDataCaptureView = new BaseDataCaptureView(false);
+        this.baseDataCaptureView = new BaseDataCaptureView(null);
     }
     connectToElement(element) {
         const viewId = (Date.now() / 1000) | 0;
@@ -257,7 +257,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '7.5.1';
+        return '7.6.0';
     }
 }
 
