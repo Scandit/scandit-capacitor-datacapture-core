@@ -1,4 +1,4 @@
-import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureViewEvents, FactoryMaker, FrameSourceListenerEvents, createNativeProxy, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource, OpenSourceSoftwareLicenseInfo } from './core.js';
+import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureViewEvents, FactoryMaker, createNativeProxy, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource, OpenSourceSoftwareLicenseInfo } from './core.js';
 export { ContextStatus, ImageBuffer, LaserlineViewfinder, LogoStyle, ScanIntention } from './core.js';
 
 /******************************************************************************
@@ -257,7 +257,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '7.6.1';
+        return '7.6.2';
     }
 }
 
@@ -1184,52 +1184,16 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
     }
 }
 
-class NativeImageFrameSourceProxy {
-    constructor() {
-        this.eventEmitter = FactoryMaker.getInstance('EventEmitter');
-    }
-    getCurrentCameraState(position) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetCurrentCameraState]({
-            position: position,
-        });
-    }
-    switchCameraToDesiredState(desiredStateJson) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SwitchCameraToDesiredState]({
-            desiredState: desiredStateJson,
-        });
-    }
-    registerListenerForEvents() {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
-    }
-    unregisterListenerForEvents() {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
-    }
-    subscribeDidChangeState() {
-        this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
-    }
-    notifyListeners(event) {
-        if (!event) {
-            // The event could be undefined/null in case the plugin result did not pass a "message",
-            // which could happen e.g. in case of "ok" results, which could signal e.g. successful
-            // listener subscriptions.
-            return;
-        }
-        switch (event.name) {
-            case FrameSourceListenerEvents.didChangeState:
-                this.eventEmitter.emit(FrameSourceListenerEvents.didChangeState, event.data);
-                break;
-        }
-    }
-}
-
 function initProxy() {
     FactoryMaker.bindInstance('DataCaptureViewProxy', new NativeDataCaptureViewProxy());
     FactoryMaker.bindInstance('FeedbackProxy', new NativeFeedbackProxy());
-    FactoryMaker.bindInstance('ImageFrameSourceProxy', new NativeImageFrameSourceProxy());
     FactoryMaker.bindLazyInstance('DataCaptureContextProxy', () => {
         return createNativeProxy(capacitorCoreNativeCaller);
     });
     FactoryMaker.bindLazyInstance('CameraProxy', () => {
+        return createNativeProxy(capacitorCoreNativeCaller);
+    });
+    FactoryMaker.bindLazyInstance('ImageFrameSourceProxy', () => {
         return createNativeProxy(capacitorCoreNativeCaller);
     });
 }

@@ -207,9 +207,7 @@ class ScanditCaptureCoreNative :
         val jsonString = call.data.getString("contextJson")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
-        activity.runOnUiThread {
-            coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
-        }
+        coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
     }
 
     //endregion
