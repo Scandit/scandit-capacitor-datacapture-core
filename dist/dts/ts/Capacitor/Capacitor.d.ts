@@ -1,7 +1,12 @@
-import { CoreDefaults, NativeCaller } from 'scandit-datacapture-frameworks-core';
+import { CoreDefaults } from 'scandit-datacapture-frameworks-core';
 import { Optional } from '../../definitions';
 export declare enum CapacitorFunction {
     GetDefaults = "getDefaults",
+    ContextFromJSON = "contextFromJSON",
+    DisposeContext = "disposeContext",
+    UpdateContextFromJSON = "updateContextFromJSON",
+    SubscribeContextListener = "subscribeContextListener",
+    UnsubscribeContextListener = "unsubscribeContextListener",
     SetViewPositionAndSize = "setViewPositionAndSize",
     ShowView = "showView",
     HideView = "hideView",
@@ -14,10 +19,14 @@ export declare enum CapacitorFunction {
     RegisterListenerForCameraEvents = "registerListenerForCameraEvents",
     UnregisterListenerForCameraEvents = "unregisterListenerForCameraEvents",
     SwitchCameraToDesiredState = "switchCameraToDesiredState",
-    GetFrame = "getFrame",
+    GetLastFrame = "getLastFrame",
+    GetLastFrameOrNull = "getLastFrameOrNull",
     EmitFeedback = "emitFeedback",
     SubscribeVolumeButtonObserver = "subscribeVolumeButtonObserver",
     UnsubscribeVolumeButtonObserver = "unsubscribeVolumeButtonObserver",
+    AddModeToContext = "addModeToContext",
+    RemoveModeFromContext = "removeModeFromContext",
+    RemoveAllModesFromContext = "removeAllModesFromContext",
     CreateDataCaptureView = "createDataCaptureView",
     UpdateDataCaptureView = "updateDataCaptureView",
     RemoveDataCaptureView = "removeDataCaptureView"
@@ -35,14 +44,3 @@ export declare const Capacitor: {
     ]>) => void;
 };
 export declare const getDefaults: () => Promise<CoreDefaults>;
-export declare class CapacitorNativeCaller implements NativeCaller {
-    private pluginName;
-    constructor(pluginName: string);
-    get framework(): string;
-    get frameworkVersion(): string;
-    callFn(fnName: string, args: object | undefined | null): Promise<any>;
-    registerEvent(evName: string, handler: (args: any) => Promise<void>): Promise<any>;
-    unregisterEvent(_evName: string, subscription: any): Promise<void>;
-    eventHook(ev: any): any;
-}
-export declare const capacitorCoreNativeCaller: CapacitorNativeCaller;
