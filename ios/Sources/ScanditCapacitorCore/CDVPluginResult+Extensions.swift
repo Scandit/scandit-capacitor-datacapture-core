@@ -23,18 +23,18 @@ public struct ListenerEvent {
         case didScanInBarcodeCapture = "BarcodeCaptureListener.didScan"
         case didUpdateSessionInBarcodeCapture = "BarcodeCaptureListener.didUpdateSession"
 
-        // Barcode Tracking listener
-        case didUpdateSessionInBarcodeTracking = "BarcodeTrackingListener.didUpdateSession"
+        // Barcode Batch listener
+        case didUpdateSessionInBarcodeBatch = "BarcodeBatchListener.didUpdateSession"
 
-        // Barcode Tracking Basic Overlay listener
-        case brushForTrackedBarcode = "BarcodeTrackingBasicOverlayListener.brushForTrackedBarcode"
-        case didTapTrackedBarcode = "BarcodeTrackingBasicOverlayListener.didTapTrackedBarcode"
+        // Barcode Batch Basic Overlay listener
+        case brushForTrackedBarcode = "BarcodeBatchBasicOverlayListener.brushForTrackedBarcode"
+        case didTapTrackedBarcode = "BarcodeBatchBasicOverlayListener.didTapTrackedBarcode"
 
-        // Barcode Tracking Advanced Overlay listener
-        case viewForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.viewForTrackedBarcode"
-        case anchorForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.anchorForTrackedBarcode"
-        case offsetForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.offsetForTrackedBarcode"
-        case didTapViewForTrackedBarcode = "BarcodeTrackingAdvancedOverlayListener.didTapViewForTrackedBarcode"
+        // Barcode Batch Advanced Overlay listener
+        case viewForTrackedBarcode = "BarcodeBatchAdvancedOverlayListener.viewForTrackedBarcode"
+        case anchorForTrackedBarcode = "BarcodeBatchAdvancedOverlayListener.anchorForTrackedBarcode"
+        case offsetForTrackedBarcode = "BarcodeBatchAdvancedOverlayListener.offsetForTrackedBarcode"
+        case didTapViewForTrackedBarcode = "BarcodeBatchAdvancedOverlayListener.didTapViewForTrackedBarcode"
 
         // Barcode Selection listener
         case didUpdateSelectionInBarcodeSelection = "BarcodeSelectionListener.didUpdateSelection"
@@ -123,7 +123,7 @@ public struct CommandError {
         case noBarcodeSelectionSession = 10073
         case noBarcodeSelectionOverlay = 10074
         case noBarcodeCaptureSession = 10075
-        case noBarcodeTrackingSession = 10076
+        case noBarcodeBatchSession = 10076
 
         case noFrameData = 10077
 
@@ -132,6 +132,9 @@ public struct CommandError {
         case barcodeCountDeserializationError = 10080
         case barcodeCountViewDeserializationError = 10081
         case noBarcodeCountView = 10082
+        
+        case noViewIdParameter = 10083
+        case noDataCaptureViewId = 10084
     }
 
     public static let invalidJSON = CommandError(code: .invalidJSON,
@@ -202,7 +205,7 @@ public struct CommandError {
                                                message: """
                                                There is no active data capture context
                                                """)
-    
+
     public static let noWebView = CommandError(code: .noContext,
                                                message: """
                                                There is no webview attached yet
@@ -230,9 +233,9 @@ public struct CommandError {
                                                 There was no BarcodeCapture session to execute the command on
                                                 """)
 
-    public static let noBarcodeTrackingSession = CommandError(code: .noBarcodeTrackingSession,
+    public static let noBarcodeBatchSession = CommandError(code: .noBarcodeBatchSession,
                                                message: """
-                                                There was no BarcodeTracking session to execute the command on
+                                                There was no BarcodeBatch session to execute the command on
                                                 """)
 
     public static let noBarcodeSelectionSession = CommandError(code: .noBarcodeSelectionSession,
@@ -248,6 +251,19 @@ public struct CommandError {
     public static let noFrameData = CommandError(code: .noFrameData,
                                                  message: """
                                                   There was no FrameData to execute the command on
+                                                  """)
+    
+    public static let noViewIdParameter = CommandError(code: .noViewIdParameter,
+                                                 message: """
+                                                  viewId parameter is missing in the call
+                                                  """)
+    public static let noModeIdParameter = CommandError(code: .noViewIdParameter,
+                                                 message: """
+                                                  modeId parameter is missing in the call
+                                                  """)
+    public static let noDataCaptureViewIdParameter = CommandError(code: .noDataCaptureViewId,
+                                                 message: """
+                                                  dataCaptureViewId parameter is missing in the call
                                                   """)
 
     public let code: Code
