@@ -4,9 +4,6 @@
  * Copyright (C) 2023- Scandit AG. All rights reserved.
  */
 
-import Foundation
-import os
-
 public protocol BlockingListenerCallbackResult: Decodable {
     var finishCallbackID: ListenerEvent.Name { get }
 }

@@ -1,4 +1,5 @@
-import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, BaseNativeProxy, DataCaptureViewEvents, FactoryMaker, createNativeProxy } from './core.js';
+import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureContextEvents, DataCaptureViewEvents, FactoryMaker, FrameSourceListenerEvents, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource, OpenSourceSoftwareLicenseInfo } from './core.js';
+export { ContextStatus, ImageBuffer, LogoStyle, ScanIntention } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -14,7 +15,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
-/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
+/* global Reflect, Promise, SuppressedError, Symbol */
 
 
 function __decorate(decorators, target, key, desc) {
@@ -129,12 +130,11 @@ class DataCaptureView {
             setTimeout(this.elementDidChange.bind(this), 300);
             setTimeout(this.elementDidChange.bind(this), 1000);
         });
-        this.baseDataCaptureView = new BaseDataCaptureView(null);
+        this.baseDataCaptureView = new BaseDataCaptureView(false);
     }
     connectToElement(element) {
-        const viewId = (Date.now() / 1000) | 0;
         // add view to native hierarchy
-        this.baseDataCaptureView.createNativeView(viewId).then(() => {
+        this.baseDataCaptureView.createNativeView().then(() => {
             this.htmlElement = element;
             this.htmlElementState = new HTMLElementState();
             // Initial update
@@ -151,8 +151,7 @@ class DataCaptureView {
     }
     setFrame(frame, isUnderContent = false) {
         return __awaiter(this, void 0, void 0, function* () {
-            const viewId = (Date.now() / 1000) | 0;
-            yield this.baseDataCaptureView.createNativeView(viewId);
+            yield this.baseDataCaptureView.createNativeView();
             return this.baseDataCaptureView.setFrame(frame, isUnderContent);
         });
     }
@@ -169,10 +168,10 @@ class DataCaptureView {
         return this._hide();
     }
     addOverlay(overlay) {
-        return this.baseDataCaptureView.addOverlay(overlay);
+        this.baseDataCaptureView.addOverlay(overlay);
     }
     removeOverlay(overlay) {
-        return this.baseDataCaptureView.removeOverlay(overlay);
+        this.baseDataCaptureView.removeOverlay(overlay);
     }
     addListener(listener) {
         this.baseDataCaptureView.addListener(listener);
@@ -256,7 +255,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '8.0.0';
+        return '7.2.5';
     }
 }
 
@@ -324,6 +323,11 @@ const doReturnWithFinish = (finishCallbackID, result) => {
 var CapacitorFunction;
 (function (CapacitorFunction) {
     CapacitorFunction["GetDefaults"] = "getDefaults";
+    CapacitorFunction["ContextFromJSON"] = "contextFromJSON";
+    CapacitorFunction["DisposeContext"] = "disposeContext";
+    CapacitorFunction["UpdateContextFromJSON"] = "updateContextFromJSON";
+    CapacitorFunction["SubscribeContextListener"] = "subscribeContextListener";
+    CapacitorFunction["UnsubscribeContextListener"] = "unsubscribeContextListener";
     CapacitorFunction["SetViewPositionAndSize"] = "setViewPositionAndSize";
     CapacitorFunction["ShowView"] = "showView";
     CapacitorFunction["HideView"] = "hideView";
@@ -340,9 +344,13 @@ var CapacitorFunction;
     CapacitorFunction["EmitFeedback"] = "emitFeedback";
     CapacitorFunction["SubscribeVolumeButtonObserver"] = "subscribeVolumeButtonObserver";
     CapacitorFunction["UnsubscribeVolumeButtonObserver"] = "unsubscribeVolumeButtonObserver";
+    CapacitorFunction["AddModeToContext"] = "addModeToContext";
+    CapacitorFunction["RemoveModeFromContext"] = "removeModeFromContext";
+    CapacitorFunction["RemoveAllModesFromContext"] = "removeAllModesFromContext";
     CapacitorFunction["CreateDataCaptureView"] = "createDataCaptureView";
     CapacitorFunction["UpdateDataCaptureView"] = "updateDataCaptureView";
     CapacitorFunction["RemoveDataCaptureView"] = "removeDataCaptureView";
+    CapacitorFunction["GetOpenSourceSoftwareLicenseInfo"] = "getOpenSourceSoftwareLicenseInfo";
 })(CapacitorFunction || (CapacitorFunction = {}));
 const pluginName = 'ScanditCaptureCoreNative';
 // tslint:disable-next-line:variable-name
@@ -367,12 +375,6 @@ class CapacitorNativeCaller {
     constructor(pluginName) {
         this.pluginName = pluginName;
     }
-    get framework() {
-        return 'capacitor';
-    }
-    get frameworkVersion() {
-        return (() => Capacitor$1.defaults.capacitorVersion)();
-    }
     callFn(fnName, args) {
         return window.Capacitor.Plugins[this.pluginName][fnName](args);
     }
@@ -382,16 +384,14 @@ class CapacitorNativeCaller {
     }
     unregisterEvent(_evName, subscription) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (subscription) {
-                yield subscription.remove();
-            }
+            yield subscription.remove();
         });
     }
     eventHook(ev) {
         return ev;
     }
 }
-const capacitorCoreNativeCaller = new CapacitorNativeCaller(Capacitor$1.pluginName);
+new CapacitorNativeCaller(Capacitor$1.pluginName);
 
 var VolumeButtonObserverEvent;
 (function (VolumeButtonObserverEvent) {
@@ -446,70 +446,6 @@ class VolumeButtonObserver {
         }
     }
 }
-
-// Core Geometry & Units
-
-var CoreExports = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    AimerViewfinder: AimerViewfinder,
-    get Anchor () { return Anchor; },
-    Brush: Brush,
-    Camera: Camera,
-    get CameraPosition () { return CameraPosition; },
-    CameraSettings: CameraSettings,
-    Color: Color,
-    ContextStatus: ContextStatus,
-    DataCaptureContext: DataCaptureContext,
-    DataCaptureContextSettings: DataCaptureContextSettings,
-    DataCaptureVersion: DataCaptureVersion,
-    DataCaptureView: DataCaptureView,
-    get Direction () { return Direction; },
-    get Expiration () { return Expiration; },
-    Feedback: Feedback,
-    get FocusGestureStrategy () { return FocusGestureStrategy; },
-    get FocusRange () { return FocusRange; },
-    FrameDataSettings: FrameDataSettings,
-    FrameDataSettingsBuilder: FrameDataSettingsBuilder,
-    get FrameSourceState () { return FrameSourceState; },
-    ImageBuffer: ImageBuffer,
-    ImageFrameSource: ImageFrameSource,
-    LaserlineViewfinder: LaserlineViewfinder,
-    LicenseInfo: LicenseInfo,
-    get LogoStyle () { return LogoStyle; },
-    MarginsWithUnit: MarginsWithUnit,
-    get MeasureUnit () { return MeasureUnit; },
-    NoViewfinder: NoViewfinder,
-    NoneLocationSelection: NoneLocationSelection,
-    NumberWithUnit: NumberWithUnit,
-    OpenSourceSoftwareLicenseInfo: OpenSourceSoftwareLicenseInfo,
-    get Orientation () { return Orientation; },
-    Point: Point,
-    PointWithUnit: PointWithUnit,
-    Quadrilateral: Quadrilateral,
-    RadiusLocationSelection: RadiusLocationSelection,
-    Rect: Rect,
-    RectWithUnit: RectWithUnit,
-    RectangularLocationSelection: RectangularLocationSelection,
-    RectangularViewfinder: RectangularViewfinder,
-    RectangularViewfinderAnimation: RectangularViewfinderAnimation,
-    get RectangularViewfinderLineStyle () { return RectangularViewfinderLineStyle; },
-    get RectangularViewfinderStyle () { return RectangularViewfinderStyle; },
-    get ScanIntention () { return ScanIntention; },
-    Size: Size,
-    SizeWithAspect: SizeWithAspect,
-    SizeWithUnit: SizeWithUnit,
-    SizeWithUnitAndAspect: SizeWithUnitAndAspect,
-    get SizingMode () { return SizingMode; },
-    Sound: Sound,
-    SwipeToZoom: SwipeToZoom,
-    TapToFocus: TapToFocus,
-    get TorchState () { return TorchState; },
-    TorchSwitchControl: TorchSwitchControl,
-    Vibration: Vibration,
-    get VideoResolution () { return VideoResolution; },
-    VolumeButtonObserver: VolumeButtonObserver,
-    ZoomSwitchControl: ZoomSwitchControl
-});
 
 /*! Capacitor: https://capacitorjs.com/ - MIT License */
 const createCapacitorPlatforms = (win) => {
@@ -1175,7 +1111,75 @@ registerPlugin('CapacitorHttp', {
 
 class NativeFeedbackProxy {
     emitFeedback(feedback) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.EmitFeedback]({ feedback: JSON.stringify(feedback.toJSON()) });
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.EmitFeedback]({ feedback: feedback.toJSON() });
+    }
+}
+
+class NativeDataCaptureContextProxy extends BaseNativeProxy {
+    get framework() {
+        return 'capacitor';
+    }
+    get frameworkVersion() {
+        return (() => Capacitor$1.defaults.capacitorVersion)();
+    }
+    contextFromJSON(contextJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.ContextFromJSON]({
+            context: contextJson,
+        });
+    }
+    updateContextFromJSON(contextJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UpdateContextFromJSON]({
+            context: contextJson,
+        });
+    }
+    addModeToContext(modeJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.AddModeToContext]({
+            modeJson: modeJson,
+        });
+    }
+    removeModeFromContext(modeJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveModeFromContext]({
+            modeJson: modeJson,
+        });
+    }
+    removeAllModesFromContext() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveAllModesFromContext]();
+    }
+    dispose() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.DisposeContext]();
+    }
+    registerListenerForDataCaptureContext() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeContextListener]();
+    }
+    unregisterListenerForDataCaptureContext() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeContextListener]();
+    }
+    subscribeDidChangeStatus() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName]
+            .addListener(DataCaptureContextEvents.didChangeStatus, this.notifyListeners.bind(this));
+    }
+    subscribeDidStartObservingContext() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName]
+            .addListener(DataCaptureContextEvents.didStartObservingContext, this.notifyListeners.bind(this));
+    }
+    getOpenSourceSoftwareLicenseInfo() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetOpenSourceSoftwareLicenseInfo]();
+    }
+    notifyListeners(event) {
+        if (!event) {
+            // The event could be undefined/null in case the plugin result did not pass a "message",
+            // which could happen e.g. in case of "ok" results, which could signal e.g. successful
+            // listener subscriptions.
+            return;
+        }
+        switch (event.name) {
+            case DataCaptureContextEvents.didChangeStatus:
+                this.eventEmitter.emit(DataCaptureContextEvents.didChangeStatus, event.data);
+                break;
+            case DataCaptureContextEvents.didStartObservingContext:
+                this.eventEmitter.emit(DataCaptureContextEvents.didStartObservingContext);
+                break;
+        }
     }
 }
 
@@ -1191,16 +1195,14 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
     hide() {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.HideView]();
     }
-    viewPointForFramePoint({ viewId, pointJson }) {
+    viewPointForFramePoint(pointJson) {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.ViewPointForFramePoint]({
-            viewId: viewId,
             point: pointJson,
         });
     }
-    viewQuadrilateralForFrameQuadrilateral({ viewId, quadrilateralJson }) {
+    viewQuadrilateralForFrameQuadrilateral(quadrilateralJson) {
         return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.ViewQuadrilateralForFrameQuadrilateral]({
-            viewId: viewId,
-            quadrilateral: quadrilateralJson,
+            point: quadrilateralJson,
         });
     }
     createView(viewJson) {
@@ -1213,20 +1215,14 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
             viewJson: viewJson,
         });
     }
-    removeView(viewId) {
-        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveDataCaptureView]({
-            viewId: viewId,
-        });
+    removeView() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RemoveDataCaptureView]();
     }
-    registerListenerForViewEvents(viewId) {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeViewListener]({
-            viewId: viewId,
-        });
+    registerListenerForViewEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SubscribeViewListener]();
     }
-    unregisterListenerForViewEvents(viewId) {
-        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeViewListener]({
-            viewId: viewId,
-        });
+    unregisterListenerForViewEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnsubscribeViewListener]();
     }
     subscribeDidChangeSize() {
         window.Capacitor.Plugins[Capacitor$1.pluginName]
@@ -1247,18 +1243,98 @@ class NativeDataCaptureViewProxy extends BaseNativeProxy {
     }
 }
 
+class NativeCameraProxy {
+    constructor() {
+        this.eventEmitter = FactoryMaker.getInstance('EventEmitter');
+    }
+    getFrame(frameId) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetFrame]({
+            frameId: frameId,
+        });
+    }
+    getCurrentCameraState(_position) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetCurrentCameraState]({
+            position: _position,
+        });
+    }
+    isTorchAvailable(position) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetIsTorchAvailable]({
+            position: position,
+        });
+    }
+    switchCameraToDesiredState(desiredStateJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SwitchCameraToDesiredState]({
+            desiredState: desiredStateJson,
+        });
+    }
+    registerListenerForCameraEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
+    }
+    unregisterListenerForCameraEvents() {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
+    }
+    subscribeDidChangeState() {
+        this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
+    }
+    notifyListeners(event) {
+        if (!event) {
+            // The event could be undefined/null in case the plugin result did not pass a "message",
+            // which could happen e.g. in case of "ok" results, which could signal e.g. successful
+            // listener subscriptions.
+            return;
+        }
+        switch (event.name) {
+            case FrameSourceListenerEvents.didChangeState:
+                this.eventEmitter.emit(FrameSourceListenerEvents.didChangeState, event.data);
+                break;
+        }
+    }
+}
+
+class NativeImageFrameSourceProxy {
+    constructor() {
+        this.eventEmitter = FactoryMaker.getInstance('EventEmitter');
+    }
+    getCurrentCameraState(position) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.GetCurrentCameraState]({
+            position: position,
+        });
+    }
+    switchCameraToDesiredState(desiredStateJson) {
+        return window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.SwitchCameraToDesiredState]({
+            desiredState: desiredStateJson,
+        });
+    }
+    registerListenerForEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.RegisterListenerForCameraEvents]();
+    }
+    unregisterListenerForEvents() {
+        window.Capacitor.Plugins[Capacitor$1.pluginName][CapacitorFunction.UnregisterListenerForCameraEvents]();
+    }
+    subscribeDidChangeState() {
+        this.didChangeState = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(FrameSourceListenerEvents.didChangeState, this.notifyListeners.bind(this));
+    }
+    notifyListeners(event) {
+        if (!event) {
+            // The event could be undefined/null in case the plugin result did not pass a "message",
+            // which could happen e.g. in case of "ok" results, which could signal e.g. successful
+            // listener subscriptions.
+            return;
+        }
+        switch (event.name) {
+            case FrameSourceListenerEvents.didChangeState:
+                this.eventEmitter.emit(FrameSourceListenerEvents.didChangeState, event.data);
+                break;
+        }
+    }
+}
+
 function initProxy() {
     FactoryMaker.bindInstance('DataCaptureViewProxy', new NativeDataCaptureViewProxy());
     FactoryMaker.bindInstance('FeedbackProxy', new NativeFeedbackProxy());
-    FactoryMaker.bindLazyInstance('DataCaptureContextProxy', () => {
-        return createNativeProxy(capacitorCoreNativeCaller);
-    });
-    FactoryMaker.bindLazyInstance('CameraProxy', () => {
-        return createNativeProxy(capacitorCoreNativeCaller);
-    });
-    FactoryMaker.bindLazyInstance('ImageFrameSourceProxy', () => {
-        return createNativeProxy(capacitorCoreNativeCaller);
-    });
+    FactoryMaker.bindInstance('DataCaptureContextProxy', new NativeDataCaptureContextProxy());
+    FactoryMaker.bindInstance('CameraProxy', new NativeCameraProxy());
+    FactoryMaker.bindInstance('ImageFrameSourceProxy', new NativeImageFrameSourceProxy());
 }
 
 const corePluginName = 'ScanditCaptureCorePlugin';
@@ -1267,7 +1343,58 @@ class ScanditCaptureCorePluginImplementation {
     initializePlugins() {
         return __awaiter(this, void 0, void 0, function* () {
             const coreDefaults = yield getDefaults();
-            let api = Object.assign({}, CoreExports);
+            let api = {
+                Feedback,
+                Camera,
+                Color,
+                DataCaptureContext,
+                DataCaptureContextSettings,
+                MarginsWithUnit,
+                NumberWithUnit,
+                Point,
+                PointWithUnit,
+                Quadrilateral,
+                RadiusLocationSelection,
+                Rect,
+                RectWithUnit,
+                RectangularLocationSelection,
+                Size,
+                SizeWithAspect,
+                SizeWithUnit,
+                SizeWithUnitAndAspect,
+                Brush,
+                RectangularViewfinder,
+                RectangularViewfinderAnimation,
+                RectangularViewfinderLineStyle,
+                RectangularViewfinderStyle,
+                AimerViewfinder,
+                CameraPosition,
+                CameraSettings,
+                FrameSourceState,
+                TorchState,
+                VideoResolution,
+                FocusRange,
+                FocusGestureStrategy,
+                Anchor,
+                DataCaptureView,
+                TorchSwitchControl,
+                ZoomSwitchControl,
+                TapToFocus,
+                SwipeToZoom,
+                DataCaptureVersion,
+                Direction,
+                Orientation,
+                MeasureUnit,
+                NoneLocationSelection,
+                SizingMode,
+                Sound,
+                NoViewfinder,
+                Vibration,
+                VolumeButtonObserver,
+                LicenseInfo,
+                ImageFrameSource,
+                OpenSourceSoftwareLicenseInfo,
+            };
             for (const key of Object.keys(window.Capacitor.Plugins)) {
                 if (key.startsWith('Scandit') && key.indexOf('Native') < 0 && key !== corePluginName) {
                     yield window.Capacitor.Plugins[key].initialize(coreDefaults)
@@ -1288,5 +1415,5 @@ registerPlugin(corePluginName, {
 // tslint:disable-next-line:variable-name
 const ScanditCaptureCorePlugin = new ScanditCaptureCorePluginImplementation();
 
-export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
+export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, Color, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Feedback, FocusGestureStrategy, FocusRange, FrameSourceState, ImageFrameSource, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
 //# sourceMappingURL=index.js.map
