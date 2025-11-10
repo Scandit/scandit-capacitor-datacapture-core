@@ -132,9 +132,6 @@ public struct CommandError {
         case barcodeCountDeserializationError = 10080
         case barcodeCountViewDeserializationError = 10081
         case noBarcodeCountView = 10082
-        
-        case noViewIdParameter = 10083
-        case noDataCaptureViewId = 10084
     }
 
     public static let invalidJSON = CommandError(code: .invalidJSON,
@@ -251,19 +248,6 @@ public struct CommandError {
     public static let noFrameData = CommandError(code: .noFrameData,
                                                  message: """
                                                   There was no FrameData to execute the command on
-                                                  """)
-    
-    public static let noViewIdParameter = CommandError(code: .noViewIdParameter,
-                                                 message: """
-                                                  viewId parameter is missing in the call
-                                                  """)
-    public static let noModeIdParameter = CommandError(code: .noViewIdParameter,
-                                                 message: """
-                                                  modeId parameter is missing in the call
-                                                  """)
-    public static let noDataCaptureViewIdParameter = CommandError(code: .noDataCaptureViewId,
-                                                 message: """
-                                                  dataCaptureViewId parameter is missing in the call
                                                   """)
 
     public let code: Code
