@@ -2,11 +2,6 @@ import { CoreDefaults, NativeCaller } from 'scandit-datacapture-frameworks-core'
 import { Optional } from '../../definitions';
 export declare enum CapacitorFunction {
     GetDefaults = "getDefaults",
-    ContextFromJSON = "contextFromJSON",
-    DisposeContext = "disposeContext",
-    UpdateContextFromJSON = "updateContextFromJSON",
-    SubscribeContextListener = "subscribeContextListener",
-    UnsubscribeContextListener = "unsubscribeContextListener",
     SetViewPositionAndSize = "setViewPositionAndSize",
     ShowView = "showView",
     HideView = "hideView",
@@ -23,13 +18,9 @@ export declare enum CapacitorFunction {
     EmitFeedback = "emitFeedback",
     SubscribeVolumeButtonObserver = "subscribeVolumeButtonObserver",
     UnsubscribeVolumeButtonObserver = "unsubscribeVolumeButtonObserver",
-    AddModeToContext = "addModeToContext",
-    RemoveModeFromContext = "removeModeFromContext",
-    RemoveAllModesFromContext = "removeAllModesFromContext",
     CreateDataCaptureView = "createDataCaptureView",
     UpdateDataCaptureView = "updateDataCaptureView",
-    RemoveDataCaptureView = "removeDataCaptureView",
-    GetOpenSourceSoftwareLicenseInfo = "getOpenSourceSoftwareLicenseInfo"
+    RemoveDataCaptureView = "removeDataCaptureView"
 }
 export interface CapacitorWindow extends Window {
     Scandit: any;
@@ -47,6 +38,8 @@ export declare const getDefaults: () => Promise<CoreDefaults>;
 export declare class CapacitorNativeCaller implements NativeCaller {
     private pluginName;
     constructor(pluginName: string);
+    get framework(): string;
+    get frameworkVersion(): string;
     callFn(fnName: string, args: object | undefined | null): Promise<any>;
     registerEvent(evName: string, handler: (args: any) => Promise<void>): Promise<any>;
     unregisterEvent(_evName: string, subscription: any): Promise<void>;
