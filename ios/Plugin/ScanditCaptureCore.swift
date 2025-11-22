@@ -69,7 +69,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(contextFromJSON:)
     public func contextFromJSON(_ call: CAPPluginCall) {
-        guard let contextJson = call.options["contextJson"] as? String else {
+        guard let contextJson = call.options["context"] as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -78,7 +78,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(updateContextFromJSON:)
     func updateContextFromJSON(_ call: CAPPluginCall) {
-        guard let contextJson = call.options["contextJson"] as? String else {
+        guard let contextJson = call.options["context"] as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -249,8 +249,8 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.getCameraState(cameraPosition: positionJson, result: CapacitorResult(call))
     }
 
-    @objc(isTorchAvailable:)
-    func isTorchAvailable(_ call: CAPPluginCall) {
+    @objc(getIsTorchAvailable:)
+    func getIsTorchAvailable(_ call: CAPPluginCall) {
         guard let positionJson = call.getString("position") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
@@ -272,7 +272,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(switchCameraToDesiredState:)
     func switchCameraToDesiredState(_ call: CAPPluginCall) {
-        guard let desiredStateJson = call.getString("desiredStateJson") else {
+        guard let desiredStateJson = call.getString("desiredState") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
