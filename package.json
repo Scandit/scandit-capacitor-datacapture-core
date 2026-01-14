@@ -1,6 +1,6 @@
 {
   "name": "scandit-capacitor-datacapture-core",
-  "version": "8.1.0",
+  "version": "8.0.1",
   "description": "Scandit Data Capture SDK for Capacitor",
   "license": "Apache-2.0",
   "private": false,
@@ -65,6 +65,6 @@
     }
   },
   "dependencies": {
-    "scandit-datacapture-frameworks-core": "8.1.0"
+    "scandit-datacapture-frameworks-core": "8.0.1"
   }
 }

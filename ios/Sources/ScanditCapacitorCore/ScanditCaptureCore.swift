@@ -4,12 +4,12 @@
  * Copyright (C) 2023- Scandit AG. All rights reserved.
  */
 
-import Capacitor
+import WebKit
 import Foundation
+import Capacitor
+
 import ScanditCaptureCore
 import ScanditFrameworksCore
-import WebKit
-
 #if !COCOAPODS
 import ScanditCapacitorDatacaptureCoreObjC
 #endif
@@ -29,14 +29,14 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "subscribeContextListener", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "unsubscribeContextListener", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "subscribeContextFrameListener", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "registerListenerForViewEvents", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "unregisterListenerForViewEvents", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "subscribeViewListener", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "unsubscribeViewListener", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "subscribeVolumeButtonObserver", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "unsubscribeVolumeButtonObserver", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "disposeContext", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "setDataCaptureViewPositionAndSize", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "showDataCaptureView", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "hideDataCaptureView", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setViewPositionAndSize", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "showView", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "hideView", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "viewPointForFramePoint", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "viewQuadrilateralForFrameQuadrilateral", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCurrentCameraState", returnType: CAPPluginReturnPromise),
@@ -57,7 +57,6 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
     ]
 
     private var coreModule: CoreModule!
-    private var touchHandler: DataCaptureViewTouchHandler?
 
     var captureView: DataCaptureView? {
         didSet {
@@ -79,25 +78,12 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
 
             webView?.addSubview(captureView)
             captureViewConstraints.captureView = captureView
-
-            // Setup touch handler for forwarding touches when WebView is on top
-            if let webView = webView {
-                touchHandler = DataCaptureViewTouchHandler(
-                    webView: webView,
-                    dataCaptureViewContainer: captureView
-                )
-            }
         }
     }
 
     private var volumeButtonObserver: VolumeButtonObserver?
 
-    private lazy var captureViewConstraints: DataCaptureViewConstraints = {
-        guard let webView = webView else {
-            fatalError("WebView must be available for DataCaptureView initialization")
-        }
-        return DataCaptureViewConstraints(relativeTo: webView)
-    }()
+    private lazy var captureViewConstraints = DataCaptureViewConstraints(relativeTo: webView!)
 
     public override func load() {
         super.load()
@@ -156,8 +142,8 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    @objc(registerListenerForViewEvents:)
-    func registerListenerForViewEvents(_ call: CAPPluginCall) {
+    @objc(subscribeViewListener:)
+    func subscribeViewListener(_ call: CAPPluginCall) {
         guard let viewId = call.getInt("viewId") else {
             call.reject(CommandError.noViewIdParameter.toJSONString())
             return
@@ -168,8 +154,8 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    @objc(unregisterListenerForViewEvents:)
-    func unregisterListenerForViewEvents(_ call: CAPPluginCall) {
+    @objc(unsubscribeViewListener:)
+    func unsubscribeViewListener(_ call: CAPPluginCall) {
         guard let viewId = call.getInt("viewId") else {
             call.reject(CommandError.noViewIdParameter.toJSONString())
             return
@@ -207,26 +193,16 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
 
     // MARK: - DataCaptureViewProxy
 
-    @objc(setDataCaptureViewPositionAndSize:)
-    func setDataCaptureViewPositionAndSize(_ call: CAPPluginCall) {
+    @objc(setViewPositionAndSize:)
+    func setViewPositionAndSize(_ call: CAPPluginCall) {
         dispatchMain {
-            let top = call.getDouble("top", 0)
-            let left = call.getDouble("left", 0)
-            let width = call.getDouble("width", 0)
-            let height = call.getDouble("height", 0)
-            let shouldBeUnderWebView = call.getBool("shouldBeUnderWebView", false)
-            let viewPositionAndSizeJSON = ViewPositionAndSizeJSON.init(
-                top: top,
-                left: left,
-                width: width,
-                height: height,
-                shouldBeUnderWebView: shouldBeUnderWebView
-            )
+            let jsonObject = call.getObject("position")
+            guard let viewPositionAndSizeJSON = try? ViewPositionAndSizeJSON.fromJSONObject(jsonObject as Any) else {
+                call.reject(CommandError.invalidJSON.toJSONString())
+                return
+            }
 
             self.captureViewConstraints.updatePositionAndSize(fromJSON: viewPositionAndSizeJSON)
-
-            // Update touch handler with layering information
-            self.touchHandler?.updateLayering(shouldBeUnderWebView: viewPositionAndSizeJSON.shouldBeUnderWebView)
 
             if viewPositionAndSizeJSON.shouldBeUnderWebView {
                 // Make the WebView transparent, so we can see views behind
@@ -243,8 +219,8 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc(showDataCaptureView:)
-    func showDataCaptureView(_ call: CAPPluginCall) {
+    @objc(showView:)
+    func showView(_ call: CAPPluginCall) {
         dispatchMain {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeShown.toJSONString())
@@ -257,8 +233,8 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc(hideDataCaptureView:)
-    func hideDataCaptureView(_ call: CAPPluginCall) {
+    @objc(hideView:)
+    func hideView(_ call: CAPPluginCall) {
         dispatchMain {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeHidden.toJSONString())
@@ -275,7 +251,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
 
     @objc(viewPointForFramePoint:)
     func viewPointForFramePoint(_ call: CAPPluginCall) {
-        guard let jsonString = call.getValue("pointJson") as? String else {
+        guard let jsonString = call.getValue("point") as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -288,7 +264,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
 
     @objc(viewQuadrilateralForFrameQuadrilateral:)
     func viewQuadrilateralForFrameQuadrilateral(_ call: CAPPluginCall) {
-        guard let jsonString = call.getValue("quadrilateralJson") as? String else {
+        guard let jsonString = call.getValue("quadrilateral") as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -296,11 +272,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
             call.reject(CommandError.noViewIdParameter.toJSONString())
             return
         }
-        coreModule.viewQuadrilateralForFrameQuadrilateral(
-            viewId: viewId,
-            json: jsonString,
-            result: CapacitorResult(call)
-        )
+        coreModule.viewQuadrilateralForFrameQuadrilateral(viewId: viewId, json: jsonString, result: CapacitorResult(call))
     }
 
     // MARK: - CameraProxy
@@ -356,7 +328,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
 
     @objc(emitFeedback:)
     func emitFeedback(_ call: CAPPluginCall) {
-        guard let feedbackJson = call.getString("feedbackJson") else {
+        guard let feedbackJson = call.getString("feedback") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -384,7 +356,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
 
     @objc(removeModeFromContext:)
     func removeModeFromContext(_ call: CAPPluginCall) {
-        guard let modeJson = call.getString("modeJson") else {
+         guard let modeJson = call.getString("modeJson") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -415,8 +387,6 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin {
             if let dcView = self.captureView {
                 self.coreModule.dataCaptureViewDisposed(dcView)
             }
-            self.touchHandler?.cleanup()
-            self.touchHandler = nil
             self.captureView = nil
             call.resolve()
         }

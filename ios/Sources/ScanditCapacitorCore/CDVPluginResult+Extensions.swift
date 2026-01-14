@@ -46,12 +46,10 @@ public struct ListenerEvent {
         // Barcode Count View listener
         case barcodeCountViewBrushForRecognizedBarcode = "BarcodeCountViewListener.brushForRecognizedBarcode"
         case barcodeCountViewBrushForUnrecognizedBarcode = "BarcodeCountViewListener.brushForUnrecognizedBarcode"
-        case barcodeCountViewBrushForRecognizedBarcodeNotInList =
-            "BarcodeCountViewListener.brushForRecognizedBarcodeNotInList"
+        case barcodeCountViewBrushForRecognizedBarcodeNotInList = "BarcodeCountViewListener.brushForRecognizedBarcodeNotInList"
         case barcodeCountViewDidTapRecognizedBarcode = "BarcodeCountViewListener.didTapRecognizedBarcode"
         case barcodeCountViewDidTapUnrecognizedBarcode = "BarcodeCountViewListener.didTapUnrecognizedBarcode"
-        case barcodeCountViewDidTapRecognizedBarcodeNotInList =
-            "BarcodeCountViewListener.didTapRecognizedBarcodeNotInList"
+        case barcodeCountViewDidTapRecognizedBarcodeNotInList = "BarcodeCountViewListener.didTapRecognizedBarcodeNotInList"
         case barcodeCountViewDidTapFilteredBarcode = "BarcodeCountViewListener.didTapFilteredBarcode"
 
         // Barcode Count View UI Listener
@@ -86,11 +84,11 @@ public struct ListenerEvent {
     }
 
     public var resultMessage: CommandError.JSONMessage {
-        [
+        return [
             "name": name.rawValue,
             "finishCallbackID": name.rawValue,
             "argument": argument,
-            "shouldNotifyWhenFinished": shouldNotifyWhenFinished,
+            "shouldNotifyWhenFinished": shouldNotifyWhenFinished
         ]
     }
 }
@@ -134,205 +132,147 @@ public struct CommandError {
         case barcodeCountDeserializationError = 10080
         case barcodeCountViewDeserializationError = 10081
         case noBarcodeCountView = 10082
-
+        
         case noViewIdParameter = 10083
         case noDataCaptureViewId = 10084
     }
 
-    public static let invalidJSON = CommandError(
-        code: .invalidJSON,
-        message: "Invalid or no JSON passed for command"
-    )
+    public static let invalidJSON = CommandError(code: .invalidJSON,
+                                                 message: "Invalid or no JSON passed for command")
 
     public static func couldNotDeserializeContext(reason additionalInformation: String) -> CommandError {
-        CommandError(
-            code: .couldNotDeserializeContext,
-            message: "Could not deserialize context: \(additionalInformation)"
-        )
+        return CommandError(code: .couldNotDeserializeContext,
+                            message: "Could not deserialize context: \(additionalInformation)")
     }
 
-    public static let noViewToBeShown = CommandError(
-        code: .noViewToBeShown,
-        message: "There was no capture view to be shown"
-    )
-    public static let noViewToBeHidden = CommandError(
-        code: .noViewToBeHidden,
-        message: "There was no capture view to be hidden"
-    )
+    public static let noViewToBeShown = CommandError(code: .noViewToBeShown,
+                                                     message: "There was no capture view to be shown")
+    public static let noViewToBeHidden = CommandError(code: .noViewToBeHidden,
+                                                      message: "There was no capture view to be hidden")
 
-    public static let cantConvertPointWithoutView = CommandError(
-        code: .cantConvertPointWithoutView,
-        message: """
-            There is no view shown, so the point can not be converted into its coordinate space
-            """
-    )
-    public static let cantConvertQuadrilateralWithoutView = CommandError(
-        code: .cantConvertQuadrilateralWithoutView,
-        message: """
-            There is no view shown, so the quadrilateral can not be converted into its coordinate space
-            """
-    )
+    public static let cantConvertPointWithoutView = CommandError(code: .cantConvertPointWithoutView,
+                                                                 message: """
+        There is no view shown, so the point can not be converted into its coordinate space
+        """)
+    public static let cantConvertQuadrilateralWithoutView = CommandError(code: .cantConvertQuadrilateralWithoutView,
+                                                                         message: """
+        There is no view shown, so the quadrilateral can not be converted into its coordinate space
+        """)
 
-    public static let noCamera = CommandError(
-        code: .noCamera,
-        message: "No camera available or not yet initialized"
-    )
-    public static let couldNotSwitchCamera = CommandError(
-        code: .couldNotSwitchCamera,
-        message: "Could not switch camera to desired state"
-    )
+    public static let noCamera = CommandError(code: .noCamera,
+                                              message: "No camera available or not yet initialized")
+    public static let couldNotSwitchCamera = CommandError(code: .couldNotSwitchCamera,
+                                                          message: "Could not switch camera to desired state")
     public static func noCamera(withPosition position: String) -> CommandError {
-        CommandError(
-            code: .noCameraWithPosition,
-            message: "No camera available with position \(position)"
-        )
+        return CommandError(code: .noCameraWithPosition,
+                            message: "No camera available with position \(position)")
     }
 
-    public static let trackedBarcodeNotFound = CommandError(
-        code: .trackedBarcodeNotFound,
-        message: """
-            Passed tracked barcode not found in current session
-            """
-    )
+    public static let trackedBarcodeNotFound = CommandError(code: .trackedBarcodeNotFound,
+                                                            message: """
+        Passed tracked barcode not found in current session
+        """)
 
-    public static let parserNotFound = CommandError(
-        code: .parserNotFound,
-        message: """
-            A parser with the passed component identifier was not found
-            """
-    )
+    public static let parserNotFound = CommandError(code: .parserNotFound,
+                                                    message: """
+        A parser with the passed component identifier was not found
+        """)
 
     public static func couldNotParseString(reason additionalInformation: String) -> CommandError {
-        CommandError(
-            code: .couldNotParseString,
-            message: "Could not parse string: \(additionalInformation)"
-        )
+        return CommandError(code: .couldNotParseString,
+                            message: "Could not parse string: \(additionalInformation)")
     }
 
     public static func couldNotParseRawData(reason additionalInformation: String) -> CommandError {
-        CommandError(
-            code: .couldNotParseRawString,
-            message: "Could not parse raw string: \(additionalInformation)"
-        )
+        return CommandError(code: .couldNotParseRawString,
+                            message: "Could not parse raw string: \(additionalInformation)")
     }
 
-    public static let noOverlay = CommandError(
-        code: .noOverlay,
-        message: "There was no overlay to execute the command on"
-    )
+    public static let noOverlay = CommandError(code: .noOverlay,
+                                               message: "There was no overlay to execute the command on")
 
-    public static let noBarcodeSelection = CommandError(
-        code: .noBarcodeSelection,
-        message: """
-            There was no BarcodeSelection mode to execute the command on
-            """
-    )
+    public static let noBarcodeSelection = CommandError(code: .noBarcodeSelection,
+                                               message: """
+                                                There was no BarcodeSelection mode to execute the command on
+                                                """)
 
-    public static let noBarcodeCount = CommandError(
-        code: .noBarcodeCount,
-        message: """
-            There was no BarcodeCount mode to execute the command on
-            """
-    )
+    public static let noBarcodeCount = CommandError(code: .noBarcodeCount,
+                                                    message: """
+                                                        There was no BarcodeCount mode to execute the command on
+                                                        """)
 
-    public static let noContext = CommandError(
-        code: .noContext,
-        message: """
-            There is no active data capture context
-            """
-    )
+    public static let noContext = CommandError(code: .noContext,
+                                               message: """
+                                               There is no active data capture context
+                                               """)
 
-    public static let noWebView = CommandError(
-        code: .noContext,
-        message: """
-            There is no webview attached yet
-            """
-    )
+    public static let noWebView = CommandError(code: .noContext,
+                                               message: """
+                                               There is no webview attached yet
+                                               """)
 
     public static func barcodeCountDeserializationError(message: String) -> CommandError {
-        CommandError(
-            code: .barcodeCountDeserializationError,
-            message: """
-                An error occurred during the deserialization of the barcode count mode:\n \(message)
-                """
-        )
+        CommandError(code: .barcodeCountDeserializationError,
+                     message: """
+                     An error occurred during the deserialization of the barcode count mode:\n \(message)
+                     """)
     }
 
     public static func barcodeCountViewDeserializationError(message: String) -> CommandError {
-        CommandError(
-            code: .barcodeCountViewDeserializationError,
-            message: """
-                An error occurred during the deserialization of the barcode count view:\n \(message)
-                """
-        )
+        CommandError(code: .barcodeCountViewDeserializationError,
+                     message: """
+                     An error occurred during the deserialization of the barcode count view:\n \(message)
+                     """)
     }
 
-    public static let noBarcodeCountView = CommandError(
-        code: .noBarcodeCountView,
-        message: "The barcode count view has not been initialized yet"
-    )
+    public static let noBarcodeCountView = CommandError(code: .noBarcodeCountView,
+                                                        message: "The barcode count view has not been initialized yet")
 
-    public static let noBarcodeCaptureSession = CommandError(
-        code: .noBarcodeCaptureSession,
-        message: """
-            There was no BarcodeCapture session to execute the command on
-            """
-    )
+    public static let noBarcodeCaptureSession = CommandError(code: .noBarcodeCaptureSession,
+                                               message: """
+                                                There was no BarcodeCapture session to execute the command on
+                                                """)
 
-    public static let noBarcodeBatchSession = CommandError(
-        code: .noBarcodeBatchSession,
-        message: """
-            There was no BarcodeBatch session to execute the command on
-            """
-    )
+    public static let noBarcodeBatchSession = CommandError(code: .noBarcodeBatchSession,
+                                               message: """
+                                                There was no BarcodeBatch session to execute the command on
+                                                """)
 
-    public static let noBarcodeSelectionSession = CommandError(
-        code: .noBarcodeSelectionSession,
-        message: """
-            There was no BarcodeSelection session to execute the command on
-            """
-    )
+    public static let noBarcodeSelectionSession = CommandError(code: .noBarcodeSelectionSession,
+                                               message: """
+                                                There was no BarcodeSelection session to execute the command on
+                                                """)
 
-    public static let noBarcodeSelectionOverlay = CommandError(
-        code: .noBarcodeSelectionOverlay,
-        message: """
-            There was no BarcodeSelection overlay to execute the command on
-            """
-    )
+    public static let noBarcodeSelectionOverlay = CommandError(code: .noBarcodeSelectionOverlay,
+                                               message: """
+                                                There was no BarcodeSelection overlay to execute the command on
+                                                """)
 
-    public static let noFrameData = CommandError(
-        code: .noFrameData,
-        message: """
-            There was no FrameData to execute the command on
-            """
-    )
-
-    public static let noViewIdParameter = CommandError(
-        code: .noViewIdParameter,
-        message: """
-            viewId parameter is missing in the call
-            """
-    )
-    public static let noModeIdParameter = CommandError(
-        code: .noViewIdParameter,
-        message: """
-            modeId parameter is missing in the call
-            """
-    )
-    public static let noDataCaptureViewIdParameter = CommandError(
-        code: .noDataCaptureViewId,
-        message: """
-            dataCaptureViewId parameter is missing in the call
-            """
-    )
+    public static let noFrameData = CommandError(code: .noFrameData,
+                                                 message: """
+                                                  There was no FrameData to execute the command on
+                                                  """)
+    
+    public static let noViewIdParameter = CommandError(code: .noViewIdParameter,
+                                                 message: """
+                                                  viewId parameter is missing in the call
+                                                  """)
+    public static let noModeIdParameter = CommandError(code: .noViewIdParameter,
+                                                 message: """
+                                                  modeId parameter is missing in the call
+                                                  """)
+    public static let noDataCaptureViewIdParameter = CommandError(code: .noDataCaptureViewId,
+                                                 message: """
+                                                  dataCaptureViewId parameter is missing in the call
+                                                  """)
 
     public let code: Code
     public let message: String
 
     public func toJSON() -> JSONMessage {
-        [
+        return [
             "code": code.rawValue,
-            "message": message,
+            "message": message
         ]
     }
 
@@ -349,9 +289,9 @@ public struct CommandError {
 
 extension NSError {
     var jsonMessage: CommandError.JSONMessage {
-        [
+        return [
             "code": code,
-            "message": description,
+            "message": description
         ]
     }
 }

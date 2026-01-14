@@ -17,12 +17,11 @@ public struct CapacitorEventEmitter: Emitter {
     public func emit(name: String, payload: [String: Any?]) {
         guard let plugin = plugin else { return }
         guard let data = try? JSONSerialization.data(withJSONObject: payload),
-            let jsonString = String(data: data, encoding: .utf8)
-        else { return }
+              let jsonString = String(data: data, encoding: .utf8) else { return }
 
         let capacitorPayload: [String: Any] = [
             "name": name,
-            "data": jsonString,
+            "data": jsonString
         ]
 
         plugin.notifyListeners(name, data: capacitorPayload)

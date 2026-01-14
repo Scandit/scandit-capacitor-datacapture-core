@@ -8,9 +8,6 @@ export declare class DataCaptureView {
     private get overlays();
     get context(): DataCaptureContext | null;
     set context(context: DataCaptureContext | null);
-    private _webViewContentOnTop;
-    get webViewContentOnTop(): boolean | null;
-    set webViewContentOnTop(value: boolean | null);
     get scanAreaMargins(): MarginsWithUnit;
     set scanAreaMargins(newValue: MarginsWithUnit);
     get pointOfInterest(): PointWithUnit;
@@ -45,7 +42,7 @@ export declare class DataCaptureView {
     removeListener(listener: DataCaptureViewListener): void;
     viewPointForFramePoint(point: Point): Promise<Point>;
     viewQuadrilateralForFrameQuadrilateral(quadrilateral: Quadrilateral): Promise<Quadrilateral>;
-    addControl(control: Control): Promise<void>;
+    addControl(control: Control): void;
     addControlWithAnchorAndOffset(control: Control, anchor: Anchor, offset: PointWithUnit): void;
     removeControl(control: Control): void;
     private subscribeToChangesOnHTMLElement;

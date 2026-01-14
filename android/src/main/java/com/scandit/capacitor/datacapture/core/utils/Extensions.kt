@@ -16,12 +16,6 @@ fun Int.pxFromDp(): Float {
     return (this * displayDensity + 0.5f)
 }
 
-fun Float.pxFromDp(): Float {
-    val context = AppAndroidEnvironment.applicationContext
-    val displayDensity = context.resources.displayMetrics.density
-    return (this * displayDensity + 0.5f)
-}
-
 fun View.removeFromParent() {
     val parent = parent as? ViewGroup ?: return
     parent.removeView(this)
