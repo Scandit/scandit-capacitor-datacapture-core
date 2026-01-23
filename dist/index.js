@@ -1,4 +1,5 @@
-import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, BaseNativeProxy, DataCaptureViewEvents, FactoryMaker, createNativeProxy } from './core.js';
+import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, BaseNativeProxy, DataCaptureViewEvents, FactoryMaker, createNativeProxy, Feedback, Camera, Color, DataCaptureContext, DataCaptureContextSettings, MarginsWithUnit, NumberWithUnit, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, Brush, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, AimerViewfinder, CameraPosition, CameraSettings, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, TorchState, VideoResolution, FocusRange, FocusGestureStrategy, Anchor, TorchSwitchControl, ZoomSwitchControl, TapToFocus, SwipeToZoom, Direction, Orientation, MeasureUnit, NoneLocationSelection, SizingMode, Sound, NoViewfinder, Vibration, LicenseInfo, ImageFrameSource, OpenSourceSoftwareLicenseInfo } from './core.js';
+export { ContextStatus, ImageBuffer, LaserlineViewfinder, LogoStyle, ScanIntention } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -14,7 +15,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
-/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
+/* global Reflect, Promise, SuppressedError, Symbol */
 
 
 function __decorate(decorators, target, key, desc) {
@@ -169,10 +170,10 @@ class DataCaptureView {
         return this._hide();
     }
     addOverlay(overlay) {
-        return this.baseDataCaptureView.addOverlay(overlay);
+        this.baseDataCaptureView.addOverlay(overlay);
     }
     removeOverlay(overlay) {
-        return this.baseDataCaptureView.removeOverlay(overlay);
+        this.baseDataCaptureView.removeOverlay(overlay);
     }
     addListener(listener) {
         this.baseDataCaptureView.addListener(listener);
@@ -256,7 +257,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '8.0.1';
+        return '7.6.6';
     }
 }
 
@@ -446,70 +447,6 @@ class VolumeButtonObserver {
         }
     }
 }
-
-// Core Geometry & Units
-
-var CoreExports = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    AimerViewfinder: AimerViewfinder,
-    get Anchor () { return Anchor; },
-    Brush: Brush,
-    Camera: Camera,
-    get CameraPosition () { return CameraPosition; },
-    CameraSettings: CameraSettings,
-    Color: Color,
-    ContextStatus: ContextStatus,
-    DataCaptureContext: DataCaptureContext,
-    DataCaptureContextSettings: DataCaptureContextSettings,
-    DataCaptureVersion: DataCaptureVersion,
-    DataCaptureView: DataCaptureView,
-    get Direction () { return Direction; },
-    get Expiration () { return Expiration; },
-    Feedback: Feedback,
-    get FocusGestureStrategy () { return FocusGestureStrategy; },
-    get FocusRange () { return FocusRange; },
-    FrameDataSettings: FrameDataSettings,
-    FrameDataSettingsBuilder: FrameDataSettingsBuilder,
-    get FrameSourceState () { return FrameSourceState; },
-    ImageBuffer: ImageBuffer,
-    ImageFrameSource: ImageFrameSource,
-    LaserlineViewfinder: LaserlineViewfinder,
-    LicenseInfo: LicenseInfo,
-    get LogoStyle () { return LogoStyle; },
-    MarginsWithUnit: MarginsWithUnit,
-    get MeasureUnit () { return MeasureUnit; },
-    NoViewfinder: NoViewfinder,
-    NoneLocationSelection: NoneLocationSelection,
-    NumberWithUnit: NumberWithUnit,
-    OpenSourceSoftwareLicenseInfo: OpenSourceSoftwareLicenseInfo,
-    get Orientation () { return Orientation; },
-    Point: Point,
-    PointWithUnit: PointWithUnit,
-    Quadrilateral: Quadrilateral,
-    RadiusLocationSelection: RadiusLocationSelection,
-    Rect: Rect,
-    RectWithUnit: RectWithUnit,
-    RectangularLocationSelection: RectangularLocationSelection,
-    RectangularViewfinder: RectangularViewfinder,
-    RectangularViewfinderAnimation: RectangularViewfinderAnimation,
-    get RectangularViewfinderLineStyle () { return RectangularViewfinderLineStyle; },
-    get RectangularViewfinderStyle () { return RectangularViewfinderStyle; },
-    get ScanIntention () { return ScanIntention; },
-    Size: Size,
-    SizeWithAspect: SizeWithAspect,
-    SizeWithUnit: SizeWithUnit,
-    SizeWithUnitAndAspect: SizeWithUnitAndAspect,
-    get SizingMode () { return SizingMode; },
-    Sound: Sound,
-    SwipeToZoom: SwipeToZoom,
-    TapToFocus: TapToFocus,
-    get TorchState () { return TorchState; },
-    TorchSwitchControl: TorchSwitchControl,
-    Vibration: Vibration,
-    get VideoResolution () { return VideoResolution; },
-    VolumeButtonObserver: VolumeButtonObserver,
-    ZoomSwitchControl: ZoomSwitchControl
-});
 
 /*! Capacitor: https://capacitorjs.com/ - MIT License */
 const createCapacitorPlatforms = (win) => {
@@ -1267,7 +1204,60 @@ class ScanditCaptureCorePluginImplementation {
     initializePlugins() {
         return __awaiter(this, void 0, void 0, function* () {
             const coreDefaults = yield getDefaults();
-            let api = Object.assign({}, CoreExports);
+            let api = {
+                Feedback,
+                Camera,
+                Color,
+                DataCaptureContext,
+                DataCaptureContextSettings,
+                MarginsWithUnit,
+                NumberWithUnit,
+                Point,
+                PointWithUnit,
+                Quadrilateral,
+                RadiusLocationSelection,
+                Rect,
+                RectWithUnit,
+                RectangularLocationSelection,
+                Size,
+                SizeWithAspect,
+                SizeWithUnit,
+                SizeWithUnitAndAspect,
+                Brush,
+                RectangularViewfinder,
+                RectangularViewfinderAnimation,
+                RectangularViewfinderLineStyle,
+                RectangularViewfinderStyle,
+                AimerViewfinder,
+                CameraPosition,
+                CameraSettings,
+                FrameDataSettings,
+                FrameDataSettingsBuilder,
+                FrameSourceState,
+                TorchState,
+                VideoResolution,
+                FocusRange,
+                FocusGestureStrategy,
+                Anchor,
+                DataCaptureView,
+                TorchSwitchControl,
+                ZoomSwitchControl,
+                TapToFocus,
+                SwipeToZoom,
+                DataCaptureVersion,
+                Direction,
+                Orientation,
+                MeasureUnit,
+                NoneLocationSelection,
+                SizingMode,
+                Sound,
+                NoViewfinder,
+                Vibration,
+                VolumeButtonObserver,
+                LicenseInfo,
+                ImageFrameSource,
+                OpenSourceSoftwareLicenseInfo,
+            };
             for (const key of Object.keys(window.Capacitor.Plugins)) {
                 if (key.startsWith('Scandit') && key.indexOf('Native') < 0 && key !== corePluginName) {
                     yield window.Capacitor.Plugins[key].initialize(coreDefaults)
@@ -1288,5 +1278,5 @@ registerPlugin(corePluginName, {
 // tslint:disable-next-line:variable-name
 const ScanditCaptureCorePlugin = new ScanditCaptureCorePluginImplementation();
 
-export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
+export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, Color, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Feedback, FocusGestureStrategy, FocusRange, FrameSourceState, ImageFrameSource, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
 //# sourceMappingURL=index.js.map

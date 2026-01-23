@@ -4,8 +4,6 @@
  * Copyright (C) 2023- Scandit AG. All rights reserved.
  */
 
-import Foundation
-
 public protocol CommandJSONArgument: Decodable {
     static func fromJSONObject(_ jsonObject: Any) throws -> Self
 }
