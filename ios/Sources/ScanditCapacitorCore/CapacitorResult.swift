@@ -31,11 +31,11 @@ public struct CapacitorResult: FrameworksResult {
             pluginCall.resolve()
         }
     }
-    
+
     public func reject(code: String, message: String?, details: Any?) {
-        pluginCall.reject(message!, code)
+        pluginCall.reject(message ?? code, code)
     }
-    
+
     public func reject(error: Error) {
         let message = String(describing: error)
         let nsError = error as NSError

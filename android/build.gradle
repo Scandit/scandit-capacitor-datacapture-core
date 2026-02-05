@@ -28,12 +28,17 @@ buildscript {
             } else {
                 ext.rootTargetCompatibility = JavaVersion.VERSION_17
             }
+
+            if (ext.rootTargetCompatibility == JavaVersion.VERSION_21) {
+                ext.kotlin_version = "1.9.25"
+                ext.agp_version = "8.7.2"
+            }
         }
     }
 
     ext {
-        kotlin_version = "1.8.20"
-        agp_version = "8.5.1"
+        kotlin_version = "1.9.25"
+        agp_version = "8.5.2"
         rootSourceCompatibility = JavaVersion.VERSION_17
         rootTargetCompatibility = JavaVersion.VERSION_17
     }
@@ -83,7 +88,7 @@ repositories {
 }
 
 dependencies {
-    def sdk_version = "7.6.7"
+    def sdk_version = "8.1.1"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
