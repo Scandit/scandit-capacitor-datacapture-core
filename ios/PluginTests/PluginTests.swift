@@ -1,6 +1,5 @@
-import Capacitor
 import XCTest
-
+import Capacitor
 @testable import Plugin
 
 class PluginTests: XCTestCase {
@@ -22,19 +21,14 @@ class PluginTests: XCTestCase {
         let value = "Hello, World!"
         let plugin = MyPlugin()
 
-        let call = CAPPluginCall(
-            callbackId: "test",
-            options: [
-                "value": value
-            ],
-            success: { (result, _) in
-                let resultValue = result!.data["value"] as? String
-                XCTAssertEqual(value, resultValue)
-            },
-            error: { (_) in
-                XCTFail("Error shouldn't have been called")
-            }
-        )
+        let call = CAPPluginCall(callbackId: "test", options: [
+            "value": value
+        ], success: { (result, _) in
+            let resultValue = result!.data["value"] as? String
+            XCTAssertEqual(value, resultValue)
+        }, error: { (_) in
+            XCTFail("Error shouldn't have been called")
+        })
 
         plugin.echo(call!)
     }
