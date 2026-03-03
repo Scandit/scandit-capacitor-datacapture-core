@@ -12,18 +12,21 @@ import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
 import com.scandit.capacitor.datacapture.core.data.ResizeAndMoveInfo
 import com.scandit.capacitor.datacapture.core.errors.JsonParseError
+import com.scandit.capacitor.datacapture.core.errors.NullFrameError
 import com.scandit.capacitor.datacapture.core.handlers.DataCaptureViewHandler
 import com.scandit.capacitor.datacapture.core.utils.CapacitorResult
 import com.scandit.datacapture.core.source.FrameSourceState
 import com.scandit.datacapture.core.source.FrameSourceStateDeserializer
 import com.scandit.datacapture.frameworks.core.CoreModule
 import com.scandit.datacapture.frameworks.core.events.Emitter
-import com.scandit.datacapture.frameworks.core.lifecycle.ActivityLifecycleDispatcher
-import com.scandit.datacapture.frameworks.core.lifecycle.DefaultActivityLifecycle
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureContextListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksDataCaptureViewListener
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceDeserializer
 import com.scandit.datacapture.frameworks.core.listeners.FrameworksFrameSourceListener
+import com.scandit.datacapture.frameworks.core.utils.DefaultLastFrameData
+import com.scandit.datacapture.frameworks.core.utils.DefaultMainThread
+import com.scandit.datacapture.frameworks.core.utils.LastFrameData
+import com.scandit.datacapture.frameworks.core.utils.MainThread
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -47,8 +50,7 @@ class ScanditCaptureCoreNative :
             "ScanditTextNative"
         )
     }
-    private val lifecycleDispatcher: ActivityLifecycleDispatcher =
-        DefaultActivityLifecycle.getInstance()
+
     private val captureViewHandler = DataCaptureViewHandler()
     private val frameSourceListener = FrameworksFrameSourceListener(this)
     private val coreModule = CoreModule(
@@ -57,6 +59,9 @@ class ScanditCaptureCoreNative :
         FrameworksDataCaptureViewListener(this),
         FrameworksFrameSourceDeserializer(frameSourceListener)
     )
+    private val mainThread: MainThread = DefaultMainThread.getInstance()
+    private val lastFrameData: LastFrameData = DefaultLastFrameData.getInstance()
+
     private var lastFrameSourceState: FrameSourceState = FrameSourceState.OFF
 
     private val plugins = mutableListOf<Plugin>()
@@ -83,7 +88,7 @@ class ScanditCaptureCoreNative :
             }
         }
 
-        captureViewHandler.initialize(bridge.webView)
+        captureViewHandler.attachWebView(bridge.webView, bridge.activity)
         coreModule.onCreate(this.context)
     }
 
@@ -94,11 +99,9 @@ class ScanditCaptureCoreNative :
         coreModule.registerDataCaptureContextListener()
         coreModule.registerDataCaptureViewListener()
         coreModule.registerFrameSourceListener()
-        lifecycleDispatcher.dispatchOnStart()
     }
 
     override fun handleOnStop() {
-        lifecycleDispatcher.dispatchOnStop()
         lastFrameSourceState = coreModule.getCurrentCameraDesiredState() ?: FrameSourceState.OFF
         coreModule.switchToDesiredCameraState(FrameSourceState.OFF)
         coreModule.unregisterDataCaptureContextListener()
@@ -107,17 +110,7 @@ class ScanditCaptureCoreNative :
     }
 
     override fun handleOnDestroy() {
-        lifecycleDispatcher.dispatchOnDestroy()
         coreModule.onDestroy()
-        captureViewHandler.disposeCurrentWebView()
-    }
-
-    override fun handleOnResume() {
-        lifecycleDispatcher.dispatchOnResume()
-    }
-
-    override fun handleOnPause() {
-        lifecycleDispatcher.dispatchOnPause()
     }
 
     private fun checkCameraPermission(): Boolean =
@@ -208,7 +201,7 @@ class ScanditCaptureCoreNative :
         val jsonString = call.data.getString("context")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
-        activity.runOnUiThread {
+        mainThread.runOnMainThread {
             coreModule.updateContextFromJson(jsonString, CapacitorResult(call))
         }
     }
@@ -298,9 +291,21 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun getFrame(call: PluginCall) {
-        val frameId = call.data.getString("frameId") ?: return call.reject(EMPTY_STRING_ERROR)
-        coreModule.getLastFrameAsJson(frameId, CapacitorResult(call))
+    fun getLastFrame(call: PluginCall) {
+        lastFrameData.getLastFrameDataJson {
+            if (it == null) {
+                call.reject(NullFrameError().serializeContent().toString())
+                return@getLastFrameDataJson
+            }
+            CapacitorResult(call).success(it)
+        }
+    }
+
+    @PluginMethod
+    fun getLastFrameOrNull(call: PluginCall) {
+        lastFrameData.getLastFrameDataJson {
+            CapacitorResult(call).success(it)
+        }
     }
 
     @PluginMethod
@@ -336,25 +341,17 @@ class ScanditCaptureCoreNative :
             ?: return call.reject(EMPTY_STRING_ERROR)
         val view = coreModule.createDataCaptureView(viewJson, CapacitorResult(call))
         if (view != null) {
-            val existingView = captureViewHandler.dataCaptureView
-            if (existingView != null) {
-                // Remove existing view and add the new one.
-                coreModule.dataCaptureViewDisposed(existingView)
-                captureViewHandler.removeDataCaptureView(existingView)
-            }
-
-            captureViewHandler.addDataCaptureView(view, this.activity)
+            captureViewHandler.attachDataCaptureView(view, this.activity)
         }
     }
 
     @PluginMethod
     fun removeDataCaptureView(call: PluginCall) {
-        // In capacitor we just show 1 datacapture view at a time
         val dcViewToRemove = captureViewHandler.dataCaptureView
         if (dcViewToRemove != null) {
             coreModule.dataCaptureViewDisposed(dcViewToRemove)
-            captureViewHandler.removeDataCaptureView(dcViewToRemove)
         }
+        captureViewHandler.disposeCurrentDataCaptureView()
         call.resolve()
     }
 
@@ -366,17 +363,9 @@ class ScanditCaptureCoreNative :
     }
 
     override fun emit(eventName: String, payload: MutableMap<String, Any?>) {
-        val capacitorPayload = JSObject()
-        capacitorPayload.put("name", eventName)
-        capacitorPayload.put("data", JSONObject(payload).toString())
-
-        notifyListeners(eventName, capacitorPayload)
+        payload["name"] = eventName
+        notifyListeners(eventName, JSObject.fromJSONObject(JSONObject(payload)))
     }
 
     override fun hasListenersForEvent(eventName: String): Boolean = this.hasListeners(eventName)
-
-    @PluginMethod
-    fun getOpenSourceSoftwareLicenseInfo(call: PluginCall) {
-        coreModule.getOpenSourceSoftwareLicenseInfo(CapacitorResult(call))
-    }
 }
