@@ -4,16 +4,13 @@
  * Copyright (C) 2023- Scandit AG. All rights reserved.
  */
 
-import Foundation
-import os
-
 public protocol BlockingListenerCallbackResult: Decodable {
     var finishCallbackID: ListenerEvent.Name { get }
 }
 
 public extension BlockingListenerCallbackResult {
     func isForListenerEvent(_ listenerEventName: ListenerEvent.Name) -> Bool {
-        finishCallbackID == listenerEventName
+        return finishCallbackID == listenerEventName
     }
 
     static func from(_ command: String?) -> Self? {
@@ -54,7 +51,7 @@ public class CallbackLocks {
 
     /// Dictionary holding the callback locks.
     /// You need to acquire `locksUnfairLock` before reading/writing the dictionary.
-    var locks: [ListenerEvent.Name: CallbackLock] = [:]
+    var locks: [ListenerEvent.Name: CallbackLock] = [ListenerEvent.Name: CallbackLock]()
 
     public init() {}
 
@@ -75,7 +72,7 @@ public class CallbackLocks {
     }
 
     public func getResult(for eventName: ListenerEvent.Name) -> BlockingListenerCallbackResult? {
-        getLock(for: eventName).result
+        return getLock(for: eventName).result
     }
 
     public func releaseAll() {
@@ -87,11 +84,9 @@ public class CallbackLocks {
     private func getLock(for eventName: ListenerEvent.Name) -> CallbackLock {
         os_unfair_lock_lock(&locksUnfairLock)
         defer { os_unfair_lock_unlock(&locksUnfairLock) }
-        if let existingLock = locks[eventName] {
-            return existingLock
+        if locks[eventName] == nil {
+            locks[eventName] = CallbackLock()
         }
-        let newLock = CallbackLock()
-        locks[eventName] = newLock
-        return newLock
+        return locks[eventName]!
     }
 }
