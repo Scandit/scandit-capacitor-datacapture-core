@@ -26,7 +26,7 @@ class DataCaptureViewConstraints {
     private var shouldBeUnderWebView: Bool = false
 
     private var constraints: [NSLayoutConstraint] {
-        return [top, left, width, height].compactMap({ $0 })
+        [top, left, width, height].compactMap({ $0 })
     }
 
     init(relativeTo webView: WKWebView) {
