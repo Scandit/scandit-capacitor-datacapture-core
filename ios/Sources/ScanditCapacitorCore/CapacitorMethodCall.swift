@@ -25,6 +25,11 @@ public class CapacitorMethodCall: FrameworksMethodCall {
             return nil
         }
 
+        // Check for NSNull (represents null from JavaScript)
+        if value is NSNull {
+            return nil
+        }
+
         if let result = value as? T {
             return result
         }
@@ -53,7 +58,8 @@ public class CapacitorMethodCall: FrameworksMethodCall {
             }
         }
 
-        return unsafeBitCast(value, to: T.self)
+        // Last resort: try direct cast (may fail for incompatible types)
+        return value as? T
     }
 
     public func hasArgument(key: String) -> Bool {
@@ -157,6 +163,23 @@ public class CapacitorMethodCall: FrameworksMethodCall {
             return nil
         default:
             return nil
+        }
+    }
+
+    private func convertToString(_ value: Any) -> String? {
+        switch value {
+        case let stringValue as String:
+            return stringValue
+        case let nsNumberValue as NSNumber:
+            return nsNumberValue.stringValue
+        case let intValue as Int:
+            return String(intValue)
+        case let doubleValue as Double:
+            return String(doubleValue)
+        case let boolValue as Bool:
+            return String(boolValue)
+        default:
+            return String(describing: value)
         }
     }
 }
