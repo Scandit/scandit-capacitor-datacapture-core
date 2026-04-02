@@ -26,17 +26,17 @@ CAP_PLUGIN(ScanditCapacitorCore, "ScanditCaptureCoreNative",
            CAP_PLUGIN_METHOD(viewPointForFramePoint, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(viewQuadrilateralForFrameQuadrilateral, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getCurrentCameraState, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(isTorchAvailable, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(getIsTorchAvailable, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(switchCameraToDesiredState, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(registerListenerForCameraEvents, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(unregisterListenerForCameraEvents, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getDefaults, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(getFrame, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(getLastFrame, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(getLastFrameOrNull, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(emitFeedback, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(addModeToContext, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(removeModeFromContext, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(removeAllModes, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(removeAllModesFromContext, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(createDataCaptureView, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(removeDataCaptureView, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(updateDataCaptureView, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(getOpenSourceSoftwareLicenseInfo, CAPPluginReturnPromise);)
+           CAP_PLUGIN_METHOD(updateDataCaptureView, CAPPluginReturnPromise);)
