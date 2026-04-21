@@ -15,13 +15,14 @@ public struct CameraSettingsDefaults: Encodable {
     let shouldPreferSmoothAutoFocus: Bool
 
     public static func from(_ cameraSettings: CameraSettings) -> CameraSettingsDefaults {
-        return CameraSettingsDefaults(
+        CameraSettingsDefaults(
             preferredResolution: cameraSettings.preferredResolution.jsonString,
             zoomFactor: Float(cameraSettings.zoomFactor),
             focusRange: cameraSettings.focusRange.jsonString,
             zoomGestureZoomFactor: Float(cameraSettings.zoomGestureZoomFactor),
             focusGestureStrategy: cameraSettings.focusGestureStrategy.jsonString,
-            shouldPreferSmoothAutoFocus: cameraSettings.shouldPreferSmoothAutoFocus)
+            shouldPreferSmoothAutoFocus: cameraSettings.shouldPreferSmoothAutoFocus
+        )
     }
 }
 
@@ -31,7 +32,7 @@ public struct BrushDefaults: Encodable {
     let strokeWidth: Int
 
     public static func from(_ brush: Brush) -> BrushDefaults {
-        return BrushDefaults(
+        BrushDefaults(
             fillColor: brush.fillColor.sdcHexString,
             strokeColor: brush.strokeColor.sdcHexString,
             strokeWidth: Int(brush.strokeWidth)
