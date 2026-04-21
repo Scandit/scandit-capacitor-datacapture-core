@@ -75,6 +75,8 @@ class ScanditCaptureCoreNative :
                 }
             }
         }
+
+        captureViewHandler.initialize(bridge.webView)
         coreModule.onCreate(this.context)
     }
 
@@ -212,23 +214,12 @@ class ScanditCaptureCoreNative :
 
     //region DataCaptureViewProxy
     @PluginMethod
-    fun setDataCaptureViewPositionAndSize(call: PluginCall) {
+    fun setViewPositionAndSize(call: PluginCall) {
         try {
-            val top = call.data.getDouble("top")
-            val left = call.data.getDouble("left")
-            val width = call.data.getDouble("width")
-            val height = call.data.getDouble("height")
-            val shouldBeUnderWebView = call.data.getBoolean("shouldBeUnderWebView")
-
-            captureViewHandler.setResizeAndMoveInfo(
-                ResizeAndMoveInfo(
-                    top = top.toFloat(),
-                    left = left.toFloat(),
-                    width = width.toFloat(),
-                    height = height.toFloat(),
-                    shouldBeUnderWebView = shouldBeUnderWebView
-                )
-            )
+            val positionJson = call.data.getString("position")
+                ?: return call.reject(EMPTY_STRING_ERROR)
+            val info = JSONObject(positionJson)
+            captureViewHandler.setResizeAndMoveInfo(ResizeAndMoveInfo(info))
             call.resolve()
         } catch (e: JSONException) {
             call.reject(JsonParseError(e.message).toString())
@@ -236,20 +227,20 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun showDataCaptureView(call: PluginCall) {
+    fun showView(call: PluginCall) {
         captureViewHandler.setVisible()
         call.resolve()
     }
 
     @PluginMethod
-    fun hideDataCaptureView(call: PluginCall) {
+    fun hideView(call: PluginCall) {
         captureViewHandler.setInvisible()
         call.resolve()
     }
 
     @PluginMethod
     fun viewPointForFramePoint(call: PluginCall) {
-        val pointJson = call.data.getString("pointJson")
+        val pointJson = call.data.getString("point")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
         val viewId = call.data.getInt("viewId")
@@ -259,7 +250,7 @@ class ScanditCaptureCoreNative :
 
     @PluginMethod
     fun viewQuadrilateralForFrameQuadrilateral(call: PluginCall) {
-        val quadrilateralJson = call.data.getString("quadrilateralJson")
+        val quadrilateralJson = call.data.getString("quadrilateral")
             ?: return call.reject(EMPTY_STRING_ERROR)
 
         val viewId = call.data.getInt("viewId")
@@ -275,7 +266,7 @@ class ScanditCaptureCoreNative :
     //region Feedback
     @PluginMethod
     fun emitFeedback(call: PluginCall) {
-        call.data.getString("feedbackJson")?.let {
+        call.data.getString("feedback")?.let {
             coreModule.emitFeedback(it, CapacitorResult(call))
         }
     }
@@ -300,14 +291,14 @@ class ScanditCaptureCoreNative :
     }
 
     @PluginMethod
-    fun registerListenerForViewEvents(call: PluginCall) {
+    fun subscribeViewListener(call: PluginCall) {
         val viewId = call.data.getInt("viewId")
         coreModule.registerDataCaptureViewListener(viewId)
         call.resolve()
     }
 
     @PluginMethod
-    fun unregisterListenerForViewEvents(call: PluginCall) {
+    fun unsubscribeViewListener(call: PluginCall) {
         val viewId = call.data.getInt("viewId")
         coreModule.unregisterDataCaptureViewListener(viewId)
         call.resolve()
@@ -362,7 +353,9 @@ class ScanditCaptureCoreNative :
                 captureViewHandler.removeDataCaptureView(existingView)
             }
 
-            captureViewHandler.addDataCaptureView(view, this.bridge)
+            activity.runOnUiThread {
+                captureViewHandler.addDataCaptureView(view, this.activity)
+            }
         }
     }
 

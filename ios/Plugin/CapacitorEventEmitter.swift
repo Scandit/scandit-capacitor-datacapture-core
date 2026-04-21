@@ -13,30 +13,25 @@ public struct CapacitorEventEmitter: Emitter {
     public init(with plugin: CAPPlugin) {
         self.plugin = plugin
     }
-
+    
     public func emit(name: String, payload: [String: Any?]) {
         guard let plugin = plugin else { return }
         guard let data = try? JSONSerialization.data(withJSONObject: payload),
-            let jsonString = String(data: data, encoding: .utf8)
-        else { return }
+              let jsonString = String(data: data, encoding: .utf8) else { return }
 
         let capacitorPayload: [String: Any] = [
             "name": name,
-            "data": jsonString,
+            "data": jsonString
         ]
 
         plugin.notifyListeners(name, data: capacitorPayload)
     }
-
+    
     public func hasListener(for event: String) -> Bool {
         plugin?.hasListeners(event) ?? false
     }
-
+    
     public func hasViewSpecificListenersForEvent(_ viewId: Int, for event: String) -> Bool {
-        plugin?.hasListeners(event) ?? false
-    }
-
-    public func hasModeSpecificListenersForEvent(_ modeId: Int, for event: String) -> Bool {
         plugin?.hasListeners(event) ?? false
     }
 }

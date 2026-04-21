@@ -22,10 +22,10 @@ public struct ViewPositionAndSizeJSON: CommandJSONArgument {
     }
 
     public var position: CGPoint {
-        CGPoint(x: left, y: top)
+        return CGPoint(x: left, y: top)
     }
 
     public var size: CGSize {
-        CGSize(width: width, height: height)
+        return CGSize(width: width, height: height)
     }
 }
