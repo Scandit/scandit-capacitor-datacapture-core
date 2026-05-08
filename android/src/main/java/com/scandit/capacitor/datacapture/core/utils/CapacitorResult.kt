@@ -7,21 +7,13 @@ import org.json.JSONObject
 
 class CapacitorResult(private val call: PluginCall) : FrameworksResult {
     override fun success(result: Any?) {
-        if (result == null) {
-            call.resolve()
-            return
-        }
-
-        val resultData = if (result is Map<*, *>) {
-            JSONObject(result).toString()
+        if (result is Map<*, *>) {
+            call.resolve(JSObject.fromJSONObject(JSONObject(result)))
+        } else if (result != null) {
+            call.resolve(JSObject().putSafe("data", result))
         } else {
-            result.toString()
+            call.resolve()
         }
-
-        val capacitorPayload = JSObject()
-        capacitorPayload.put("data", resultData)
-
-        call.resolve(capacitorPayload)
     }
 
     override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {

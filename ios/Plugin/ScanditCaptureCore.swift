@@ -21,6 +21,19 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     private var coreModule: CoreModule!
 
+    public var context: DataCaptureContext? {
+        didSet {
+            Self.context = context
+            os_unfair_lock_lock(&Self.contextListenersLock)
+            defer { os_unfair_lock_unlock(&Self.contextListenersLock) }
+            Self.contextListeners.compactMap { $0 as? ContextChangeListener }.forEach {
+                $0.context(didChange: context)
+            }
+        }
+    }
+
+    private static var context: DataCaptureContext?
+
     var captureView: DataCaptureView? {
         didSet {
             guard oldValue != captureView else { return }
@@ -44,6 +57,32 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
     }
 
+    private static var contextListenersLock = os_unfair_lock()
+    private static var contextListeners = NSMutableSet()
+
+    public static func registerContextChangeListener(listener: ContextChangeListener) {
+        if Self.contextListeners.contains(listener) {
+            return
+        }
+        Self.contextListeners.add(listener)
+        listener.context(didChange: context)
+    }
+
+    public static func unregisterContextChangeListener(listener: ContextChangeListener) {
+        if Self.contextListeners.contains(listener) {
+            Self.contextListeners.remove(listener)
+        }
+    }
+
+    public static var lastFrame: FrameData? {
+        get {
+            LastFrameData.shared.frameData
+        }
+        set {
+            LastFrameData.shared.frameData = newValue
+        }
+    }
+
     private var volumeButtonObserver: VolumeButtonObserver?
 
     private lazy var captureViewConstraints = DataCaptureViewConstraints(relativeTo: webView!)
@@ -51,7 +90,17 @@ public class ScanditCapacitorCore: CAPPlugin {
     public override func load() {
         super.load()
         let emitter = CapacitorEventEmitter(with: self)
-        coreModule = CoreModule.create(emitter: emitter)
+        let frameSourceListener = FrameworksFrameSourceListener(eventEmitter: emitter)
+        let framesourceDeserializer = FrameworksFrameSourceDeserializer(
+            frameSourceListener: frameSourceListener,
+            torchListener: frameSourceListener
+        )
+        let contextDeserializer = FrameworksDataCaptureContextListener(eventEmitter: emitter)
+        let viewListener = FrameworksDataCaptureViewListener(eventEmitter: emitter)
+        coreModule = CoreModule(frameSourceDeserializer: framesourceDeserializer,
+                                frameSourceListener: frameSourceListener,
+                                dataCaptureContextListener: contextDeserializer,
+                                dataCaptureViewListener: viewListener)
         coreModule.didStart()
         DeserializationLifeCycleDispatcher.shared.attach(observer: self)
     }
@@ -61,7 +110,7 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.didStop()
         DeserializationLifeCycleDispatcher.shared.detach(observer: self)
         coreModule.unregisterDataCaptureContextListener()
-        coreModule.unregisterTopmostDataCaptureViewListener()
+        coreModule.unregisterDataCaptureViewListener()
         coreModule.unregisterFrameSourceListener()
     }
 
@@ -69,7 +118,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(contextFromJSON:)
     public func contextFromJSON(_ call: CAPPluginCall) {
-        guard let contextJson = call.options["contextJson"] as? String else {
+        guard let contextJson = call.options["context"] as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -78,7 +127,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(updateContextFromJSON:)
     func updateContextFromJSON(_ call: CAPPluginCall) {
-        guard let contextJson = call.options["contextJson"] as? String else {
+        guard let contextJson = call.options["context"] as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -107,23 +156,13 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(subscribeViewListener:)
     func subscribeViewListener(_ call: CAPPluginCall) {
-        guard let viewId = call.getInt("viewId") else {
-            call.reject(CommandError.noViewIdParameter.toJSONString())
-            return
-        }
-            
-        self.coreModule.registerDataCaptureViewListener(viewId: viewId)
-        
+        self.coreModule.registerDataCaptureViewListener()
         call.resolve()
     }
 
     @objc(unsubscribeViewListener:)
     func unsubscribeViewListener(_ call: CAPPluginCall) {
-        guard let viewId = call.getInt("viewId") else {
-            call.reject(CommandError.noViewIdParameter.toJSONString())
-            return
-        }
-        self.coreModule.unregisterDataCaptureViewListener(viewId: viewId)
+        self.coreModule.unregisterDataCaptureViewListener()
         call.resolve()
     }
 
@@ -158,7 +197,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(setViewPositionAndSize:)
     func setViewPositionAndSize(_ call: CAPPluginCall) {
-        dispatchMain {
+        dispatchMainSync {
             let jsonObject = call.getObject("position")
             guard let viewPositionAndSizeJSON = try? ViewPositionAndSizeJSON.fromJSONObject(jsonObject as Any) else {
                 call.reject(CommandError.invalidJSON.toJSONString())
@@ -184,7 +223,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(showView:)
     func showView(_ call: CAPPluginCall) {
-        dispatchMain {
+        dispatchMainSync {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeShown.toJSONString())
                 return
@@ -198,7 +237,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(hideView:)
     func hideView(_ call: CAPPluginCall) {
-        dispatchMain {
+        dispatchMainSync {
             guard let captureView = self.captureView else {
                 call.reject(CommandError.noViewToBeHidden.toJSONString())
                 return
@@ -218,24 +257,16 @@ public class ScanditCapacitorCore: CAPPlugin {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        guard let viewId = call.getInt("viewId") else {
-            call.reject(CommandError.noViewIdParameter.toJSONString())
-            return
-        }
-        coreModule.viewPointForFramePoint(viewId: viewId, json: jsonString, result: CapacitorResult(call))
+        coreModule.viewPointForFramePoint(json: jsonString, result: CapacitorResult(call))
     }
 
     @objc(viewQuadrilateralForFrameQuadrilateral:)
     func viewQuadrilateralForFrameQuadrilateral(_ call: CAPPluginCall) {
-        guard let jsonString = call.getValue("quadrilateral") as? String else {
+        guard let jsonString = call.getValue("point") as? String else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        guard let viewId = call.getInt("viewId") else {
-            call.reject(CommandError.noViewIdParameter.toJSONString())
-            return
-        }
-        coreModule.viewQuadrilateralForFrameQuadrilateral(viewId: viewId, json: jsonString, result: CapacitorResult(call))
+        coreModule.viewQuadrilateralForFrameQuadrilateral(json: jsonString, result: CapacitorResult(call))
     }
 
     // MARK: - CameraProxy
@@ -249,8 +280,8 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.getCameraState(cameraPosition: positionJson, result: CapacitorResult(call))
     }
 
-    @objc(isTorchAvailable:)
-    func isTorchAvailable(_ call: CAPPluginCall) {
+    @objc(getIsTorchAvailable:)
+    func getIsTorchAvailable(_ call: CAPPluginCall) {
         guard let positionJson = call.getString("position") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
@@ -272,7 +303,7 @@ public class ScanditCapacitorCore: CAPPlugin {
 
     @objc(switchCameraToDesiredState:)
     func switchCameraToDesiredState(_ call: CAPPluginCall) {
-        guard let desiredStateJson = call.getString("desiredStateJson") else {
+        guard let desiredStateJson = call.getString("desiredState") else {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
@@ -298,14 +329,22 @@ public class ScanditCapacitorCore: CAPPlugin {
         coreModule.emitFeedback(json: feedbackJson, result: CapacitorResult(call))
     }
 
-    @objc(getFrame:)
-    func getFrame(_ call: CAPPluginCall) {
-        guard let frameId = call.getString("frameId") else {
-            call.reject(CommandError.invalidJSON.toJSONString())
+    @objc(getLastFrame:)
+    func getLastFrame(_ call: CAPPluginCall) {
+        guard let lastFrame = LastFrameData.shared.frameData else {
+            call.reject(CommandError.noFrameData.toJSONString())
             return
         }
+        call.resolve([
+            "data": lastFrame.jsonString
+        ])
+    }
 
-        coreModule.getLastFrameAsJson(frameId: frameId, result: CapacitorResult(call))
+    @objc(getLastFrameOrNull:)
+    func getLastFrameOrNull(_ call: CAPPluginCall) {
+        call.resolve([
+            "data": LastFrameData.shared.frameData?.jsonString ?? "",
+        ])
     }
 
     @objc(addModeToContext:)
@@ -337,18 +376,18 @@ public class ScanditCapacitorCore: CAPPlugin {
             call.reject(CommandError.invalidJSON.toJSONString())
             return
         }
-        dispatchMain {
-            self.captureView = self.coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
+        dispatchMainSync {
+            captureView = coreModule.createDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
         }
     }
 
     @objc(removeDataCaptureView:)
     func removeDataCaptureView(_ call: CAPPluginCall) {
-        dispatchMain {
-            if let dcView = self.captureView {
-                self.coreModule.dataCaptureViewDisposed(dcView)
+        dispatchMainSync {
+            if let dcView = captureView {
+                coreModule.dataCaptureViewDisposed(dcView)
             }
-            self.captureView = nil
+            captureView = nil
             call.resolve()
         }
     }
@@ -361,14 +400,13 @@ public class ScanditCapacitorCore: CAPPlugin {
         }
         coreModule.updateDataCaptureView(viewJson: viewJson, result: CapacitorResult(call))
     }
-
-    @objc(getOpenSourceSoftwareLicenseInfo:)
-    func getOpenSourceSoftwareLicenseInfo(_ call: CAPPluginCall) {
-        coreModule.getOpenSourceSoftwareLicenseInfo(result: CapacitorResult(call))
-    }
 }
 
 extension ScanditCapacitorCore: DeserializationLifeCycleObserver {
+    public func dataCaptureContext(deserialized context: DataCaptureContext?) {
+        self.context = context
+    }
+    
     public func didDisposeDataCaptureContext() {
         captureView = nil
     }
