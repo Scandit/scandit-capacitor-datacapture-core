@@ -83,7 +83,7 @@ repositories {
 }
 
 dependencies {
-    def sdk_version = "7.6.13"
+    def sdk_version = "7.6.14"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
