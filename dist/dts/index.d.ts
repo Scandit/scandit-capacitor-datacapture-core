@@ -5,3 +5,4 @@ export { DataCaptureView } from './ts/DataCaptureView';
 export { BlockingModeListenerResult } from './ts/Capacitor/CommonCapacitor';
 export { doReturnWithFinish } from './ts/Capacitor/CommonCapacitor';
 export { capacitorExec } from './ts/Capacitor/CommonCapacitor';
+export { CapacitorNativeCaller } from './ts/Capacitor/Capacitor';
