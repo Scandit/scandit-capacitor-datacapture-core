@@ -1,5 +1,5 @@
-import Foundation
 // swift-tools-version: 5.5
+import Foundation
 import PackageDescription
 
 // Read version from package.json
