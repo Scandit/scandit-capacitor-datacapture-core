@@ -1,4 +1,4 @@
-import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, ZoomSwitchOrientation, registerCoreProxies } from './core.js';
+import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, SelectionMode, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, ZoomSwitchOrientation, registerCoreProxies } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -149,13 +149,13 @@ class DataCaptureView {
         this._htmlElementState = new HTMLElementState();
         this.scrollListener = this.elementDidChange.bind(this);
         this.domObserver = new MutationObserver(this.elementDidChange.bind(this));
-        this.orientationChangeListener = (() => {
+        this.orientationChangeListener = () => {
             this.elementDidChange();
             // SDC-1784 -> workaround because at the moment of this callback the element doesn't have the updated size.
             setTimeout(this.elementDidChange.bind(this), 100);
             setTimeout(this.elementDidChange.bind(this), 300);
             setTimeout(this.elementDidChange.bind(this), 1000);
-        });
+        };
         this.baseDataCaptureView = new BaseDataCaptureView(null);
     }
     connectToElement(element) {
@@ -251,11 +251,11 @@ class DataCaptureView {
             newState.shouldBeUnderContent = this._webViewContentOnTop;
         }
         else {
-            newState.shouldBeUnderContent = parseInt(this.htmlElement.style.zIndex || '1', 10) < 0
-                || parseInt(getComputedStyle(this.htmlElement).zIndex || '1', 10) < 0;
+            newState.shouldBeUnderContent =
+                parseInt(this.htmlElement.style.zIndex || '1', 10) < 0 ||
+                    parseInt(getComputedStyle(this.htmlElement).zIndex || '1', 10) < 0;
         }
-        const isDisplayed = getComputedStyle(this.htmlElement).display !== 'none'
-            && this.htmlElement.style.display !== 'none';
+        const isDisplayed = getComputedStyle(this.htmlElement).display !== 'none' && this.htmlElement.style.display !== 'none';
         const isInDOM = document.body.contains(this.htmlElement);
         newState.isShown = isDisplayed && isInDOM && !this.htmlElement.hidden;
         this.htmlElementState = newState;
@@ -297,7 +297,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '8.4.1';
+        return '8.5.0';
     }
 }
 
@@ -335,10 +335,12 @@ const capacitorExec = (successCallback, errorCallback, pluginName, functionName,
                 // tslint:disable-next-line:no-console
                 console.log(`[SCANDIT WARNING] Took ${callbackDuration}ms to execute callback that's blocking native execution. You should keep this duration short, for more information, take a look at the documentation.`);
             }
-            window.Capacitor.Plugins[pluginName].finishCallback([{
+            window.Capacitor.Plugins[pluginName].finishCallback([
+                {
                     finishCallbackID,
                     result: callbackResult,
-                }]);
+                },
+            ]);
         }
     };
     const extendedErrorCallback = (error) => {
@@ -402,8 +404,7 @@ class CapacitorNativeCaller {
         return plugin[fnName](args);
     }
     registerEvent(evName, handler) {
-        return window.Capacitor.Plugins[this.pluginName]
-            .addListener(evName, handler);
+        return window.Capacitor.Plugins[this.pluginName].addListener(evName, handler);
     }
     unregisterEvent(_evName, subscription) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -432,8 +433,7 @@ class VolumeButtonObserverProxy {
         this.unsubscribe();
     }
     subscribe() {
-        this.subscriber = window.Capacitor.Plugins[Capacitor$1.pluginName]
-            .addListener(VolumeButtonObserverEvent.DidChangeVolume, this.notifyListeners.bind(this));
+        this.subscriber = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(VolumeButtonObserverEvent.DidChangeVolume, this.notifyListeners.bind(this));
     }
     unsubscribe() {
         this.subscriber.remove();
@@ -527,6 +527,7 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     ScanditIconBuilder: ScanditIconBuilder,
     get ScanditIconShape () { return ScanditIconShape; },
     get ScanditIconType () { return ScanditIconType; },
+    get SelectionMode () { return SelectionMode; },
     Size: Size,
     SizeWithAspect: SizeWithAspect,
     SizeWithUnit: SizeWithUnit,
@@ -1223,5 +1224,5 @@ registerPlugin(corePluginName, {
 // tslint:disable-next-line:variable-name
 const ScanditCaptureCorePlugin = new ScanditCaptureCorePluginImplementation();
 
-export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, ZoomSwitchOrientation, capacitorExec, doReturnWithFinish };
+export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, SelectionMode, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, ZoomSwitchOrientation, capacitorExec, doReturnWithFinish };
 //# sourceMappingURL=index.js.map

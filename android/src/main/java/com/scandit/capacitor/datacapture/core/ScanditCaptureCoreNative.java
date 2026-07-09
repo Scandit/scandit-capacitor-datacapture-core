@@ -298,7 +298,13 @@ public class ScanditCaptureCoreNative extends Plugin implements Emitter {
       return;
     }
 
-    if (checkCameraPermission()) {
+    // Only gate on the camera permission when the active frame source is a
+    // Camera. ImageFrameSource processes a base64 image entirely in-memory and
+    // needs no camera permission; gating it here would swallow the call and
+    // trigger an unnecessary permission prompt in image-only flows.
+    // getCurrentCameraDesiredState() is non-null only when a Camera is the
+    // active frame source (see DefaultFrameSourceHandler).
+    if (coreModule.getCurrentCameraDesiredState() == null || checkCameraPermission()) {
       coreModule.execute(new CapacitorMethodCall(call), new CapacitorResult(call), coreModule);
       FrameSourceState currentState = coreModule.getCurrentCameraDesiredState();
       lastFrameSourceState = currentState != null ? currentState : FrameSourceState.OFF;

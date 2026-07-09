@@ -23,6 +23,7 @@ export { ClusteringMode } from 'scandit-datacapture-frameworks-core';
 export { LogoStyle } from 'scandit-datacapture-frameworks-core';
 export { Brush } from 'scandit-datacapture-frameworks-core';
 export { ScanIntention } from 'scandit-datacapture-frameworks-core';
+export { SelectionMode } from 'scandit-datacapture-frameworks-core';
 export { Control } from 'scandit-datacapture-frameworks-core';
 export { ScanditIcon } from 'scandit-datacapture-frameworks-core';
 export { ScanditIconBuilder } from 'scandit-datacapture-frameworks-core';
