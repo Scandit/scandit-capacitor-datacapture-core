@@ -8,14 +8,6 @@ export declare class DataCaptureView {
     private get overlays();
     get context(): DataCaptureContext | null;
     set context(context: DataCaptureContext | null);
-    private _webViewContentOnTop;
-    private htmlElement;
-    private _htmlElementState;
-    private scrollListener;
-    private domObserver;
-    private orientationChangeListener;
-    get webViewContentOnTop(): boolean | null;
-    set webViewContentOnTop(value: boolean | null);
     get scanAreaMargins(): MarginsWithUnit;
     set scanAreaMargins(newValue: MarginsWithUnit);
     get pointOfInterest(): PointWithUnit;
@@ -28,17 +20,15 @@ export declare class DataCaptureView {
     set logoOffset(newValue: PointWithUnit);
     get focusGesture(): FocusGesture | null;
     set focusGesture(newValue: FocusGesture | null);
-    get zoomGestures(): ZoomGesture[];
-    set zoomGestures(newValue: ZoomGesture[]);
-    /** @deprecated Use zoomGestures instead. Will be removed in a future version. */
     get zoomGesture(): ZoomGesture | null;
-    /** @deprecated Use zoomGestures instead. Will be removed in a future version. */
     set zoomGesture(newValue: ZoomGesture | null);
-    get shouldShowZoomNotification(): boolean;
-    set shouldShowZoomNotification(newValue: boolean);
-    setProperty<T>(name: string, value: T): void;
+    private htmlElement;
+    private _htmlElementState;
     private set htmlElementState(value);
     private get htmlElementState();
+    private scrollListener;
+    private domObserver;
+    private orientationChangeListener;
     static forContext(context: Optional<DataCaptureContext>): DataCaptureView;
     constructor();
     connectToElement(element: HTMLElement): void;
@@ -46,13 +36,13 @@ export declare class DataCaptureView {
     setFrame(frame: Rect, isUnderContent?: boolean): Promise<void>;
     show(): Promise<void>;
     hide(): Promise<void>;
-    addOverlay(overlay: DataCaptureOverlay): Promise<void>;
-    removeOverlay(overlay: DataCaptureOverlay): Promise<void>;
+    addOverlay(overlay: DataCaptureOverlay): void;
+    removeOverlay(overlay: DataCaptureOverlay): void;
     addListener(listener: DataCaptureViewListener): void;
     removeListener(listener: DataCaptureViewListener): void;
     viewPointForFramePoint(point: Point): Promise<Point>;
     viewQuadrilateralForFrameQuadrilateral(quadrilateral: Quadrilateral): Promise<Quadrilateral>;
-    addControl(control: Control): Promise<void>;
+    addControl(control: Control): void;
     addControlWithAnchorAndOffset(control: Control, anchor: Anchor, offset: PointWithUnit): void;
     removeControl(control: Control): void;
     private subscribeToChangesOnHTMLElement;
