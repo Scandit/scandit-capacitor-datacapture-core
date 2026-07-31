@@ -1,4 +1,4 @@
-import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, registerCoreProxies } from './core.js';
+import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, SelectionMode, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, ZoomSwitchOrientation, registerCoreProxies } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -94,11 +94,28 @@ class DataCaptureView {
     set focusGesture(newValue) {
         this.baseDataCaptureView.focusGesture = newValue;
     }
+    get zoomGestures() {
+        return this.baseDataCaptureView.zoomGestures;
+    }
+    set zoomGestures(newValue) {
+        this.baseDataCaptureView.zoomGestures = newValue;
+    }
+    /** @deprecated Use zoomGestures instead. Will be removed in a future version. */
     get zoomGesture() {
         return this.baseDataCaptureView.zoomGesture;
     }
+    /** @deprecated Use zoomGestures instead. Will be removed in a future version. */
     set zoomGesture(newValue) {
         this.baseDataCaptureView.zoomGesture = newValue;
+    }
+    get shouldShowZoomNotification() {
+        return this.baseDataCaptureView.shouldShowZoomNotification;
+    }
+    set shouldShowZoomNotification(newValue) {
+        this.baseDataCaptureView.shouldShowZoomNotification = newValue;
+    }
+    setProperty(name, value) {
+        this.baseDataCaptureView.setProperty(name, value);
     }
     set htmlElementState(newState) {
         const didChangeShown = this._htmlElementState.isShown !== newState.isShown;
@@ -132,13 +149,13 @@ class DataCaptureView {
         this._htmlElementState = new HTMLElementState();
         this.scrollListener = this.elementDidChange.bind(this);
         this.domObserver = new MutationObserver(this.elementDidChange.bind(this));
-        this.orientationChangeListener = (() => {
+        this.orientationChangeListener = () => {
             this.elementDidChange();
             // SDC-1784 -> workaround because at the moment of this callback the element doesn't have the updated size.
             setTimeout(this.elementDidChange.bind(this), 100);
             setTimeout(this.elementDidChange.bind(this), 300);
             setTimeout(this.elementDidChange.bind(this), 1000);
-        });
+        };
         this.baseDataCaptureView = new BaseDataCaptureView(null);
     }
     connectToElement(element) {
@@ -234,11 +251,11 @@ class DataCaptureView {
             newState.shouldBeUnderContent = this._webViewContentOnTop;
         }
         else {
-            newState.shouldBeUnderContent = parseInt(this.htmlElement.style.zIndex || '1', 10) < 0
-                || parseInt(getComputedStyle(this.htmlElement).zIndex || '1', 10) < 0;
+            newState.shouldBeUnderContent =
+                parseInt(this.htmlElement.style.zIndex || '1', 10) < 0 ||
+                    parseInt(getComputedStyle(this.htmlElement).zIndex || '1', 10) < 0;
         }
-        const isDisplayed = getComputedStyle(this.htmlElement).display !== 'none'
-            && this.htmlElement.style.display !== 'none';
+        const isDisplayed = getComputedStyle(this.htmlElement).display !== 'none' && this.htmlElement.style.display !== 'none';
         const isInDOM = document.body.contains(this.htmlElement);
         newState.isShown = isDisplayed && isInDOM && !this.htmlElement.hidden;
         this.htmlElementState = newState;
@@ -280,7 +297,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '8.1.6';
+        return '8.5.2';
     }
 }
 
@@ -318,10 +335,12 @@ const capacitorExec = (successCallback, errorCallback, pluginName, functionName,
                 // tslint:disable-next-line:no-console
                 console.log(`[SCANDIT WARNING] Took ${callbackDuration}ms to execute callback that's blocking native execution. You should keep this duration short, for more information, take a look at the documentation.`);
             }
-            window.Capacitor.Plugins[pluginName].finishCallback([{
+            window.Capacitor.Plugins[pluginName].finishCallback([
+                {
                     finishCallbackID,
                     result: callbackResult,
-                }]);
+                },
+            ]);
         }
     };
     const extendedErrorCallback = (error) => {
@@ -376,11 +395,16 @@ class CapacitorNativeCaller {
     }
     callFn(fnName, args, _meta) {
         // meta parameter ignored - Capacitor handles events automatically through plugin system
-        return window.Capacitor.Plugins[this.pluginName][fnName](args);
+        const plugin = window.Capacitor.Plugins[this.pluginName];
+        if (!plugin || typeof plugin[fnName] !== 'function') {
+            // tslint:disable-next-line:no-console
+            console.error(`Function '${fnName}' not found in plugin '${this.pluginName}'`);
+            return Promise.reject(new Error(`Function '${fnName}' not found in plugin '${this.pluginName}'`));
+        }
+        return plugin[fnName](args);
     }
     registerEvent(evName, handler) {
-        return window.Capacitor.Plugins[this.pluginName]
-            .addListener(evName, handler);
+        return window.Capacitor.Plugins[this.pluginName].addListener(evName, handler);
     }
     unregisterEvent(_evName, subscription) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -409,8 +433,7 @@ class VolumeButtonObserverProxy {
         this.unsubscribe();
     }
     subscribe() {
-        this.subscriber = window.Capacitor.Plugins[Capacitor$1.pluginName]
-            .addListener(VolumeButtonObserverEvent.DidChangeVolume, this.notifyListeners.bind(this));
+        this.subscriber = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(VolumeButtonObserverEvent.DidChangeVolume, this.notifyListeners.bind(this));
     }
     unsubscribe() {
         this.subscriber.remove();
@@ -458,6 +481,7 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     Camera: Camera,
     get CameraPosition () { return CameraPosition; },
     CameraSettings: CameraSettings,
+    get ClusteringMode () { return ClusteringMode; },
     Color: Color,
     ContextStatus: ContextStatus,
     DataCaptureContext: DataCaptureContext,
@@ -469,6 +493,7 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     Feedback: Feedback,
     get FocusGestureStrategy () { return FocusGestureStrategy; },
     get FocusRange () { return FocusRange; },
+    get FontFamily () { return FontFamily; },
     FrameDataSettings: FrameDataSettings,
     FrameDataSettingsBuilder: FrameDataSettingsBuilder,
     get FrameSourceState () { return FrameSourceState; },
@@ -477,6 +502,7 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     LaserlineViewfinder: LaserlineViewfinder,
     LicenseInfo: LicenseInfo,
     get LogoStyle () { return LogoStyle; },
+    get MacroMode () { return MacroMode; },
     MarginsWithUnit: MarginsWithUnit,
     get MeasureUnit () { return MeasureUnit; },
     NoViewfinder: NoViewfinder,
@@ -484,6 +510,7 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     NumberWithUnit: NumberWithUnit,
     OpenSourceSoftwareLicenseInfo: OpenSourceSoftwareLicenseInfo,
     get Orientation () { return Orientation; },
+    PinchToZoom: PinchToZoom,
     Point: Point,
     PointWithUnit: PointWithUnit,
     Quadrilateral: Quadrilateral,
@@ -496,6 +523,11 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     get RectangularViewfinderLineStyle () { return RectangularViewfinderLineStyle; },
     get RectangularViewfinderStyle () { return RectangularViewfinderStyle; },
     get ScanIntention () { return ScanIntention; },
+    ScanditIcon: ScanditIcon,
+    ScanditIconBuilder: ScanditIconBuilder,
+    get ScanditIconShape () { return ScanditIconShape; },
+    get ScanditIconType () { return ScanditIconType; },
+    get SelectionMode () { return SelectionMode; },
     Size: Size,
     SizeWithAspect: SizeWithAspect,
     SizeWithUnit: SizeWithUnit,
@@ -504,56 +536,17 @@ var CoreExports = /*#__PURE__*/Object.freeze({
     Sound: Sound,
     SwipeToZoom: SwipeToZoom,
     TapToFocus: TapToFocus,
+    get TextAlignment () { return TextAlignment; },
     get TorchState () { return TorchState; },
     TorchSwitchControl: TorchSwitchControl,
     Vibration: Vibration,
     get VideoResolution () { return VideoResolution; },
     VolumeButtonObserver: VolumeButtonObserver,
-    ZoomSwitchControl: ZoomSwitchControl
+    ZoomSwitchControl: ZoomSwitchControl,
+    get ZoomSwitchOrientation () { return ZoomSwitchOrientation; }
 });
 
 /*! Capacitor: https://capacitorjs.com/ - MIT License */
-const createCapacitorPlatforms = (win) => {
-    const defaultPlatformMap = new Map();
-    defaultPlatformMap.set('web', { name: 'web' });
-    const capPlatforms = win.CapacitorPlatforms || {
-        currentPlatform: { name: 'web' },
-        platforms: defaultPlatformMap,
-    };
-    const addPlatform = (name, platform) => {
-        capPlatforms.platforms.set(name, platform);
-    };
-    const setPlatform = (name) => {
-        if (capPlatforms.platforms.has(name)) {
-            capPlatforms.currentPlatform = capPlatforms.platforms.get(name);
-        }
-    };
-    capPlatforms.addPlatform = addPlatform;
-    capPlatforms.setPlatform = setPlatform;
-    return capPlatforms;
-};
-const initPlatforms = (win) => (win.CapacitorPlatforms = createCapacitorPlatforms(win));
-/**
- * @deprecated Set `CapacitorCustomPlatform` on the window object prior to runtime executing in the web app instead
- */
-const CapacitorPlatforms = /*#__PURE__*/ initPlatforms((typeof globalThis !== 'undefined'
-    ? globalThis
-    : typeof self !== 'undefined'
-        ? self
-        : typeof window !== 'undefined'
-            ? window
-            : typeof global !== 'undefined'
-                ? global
-                : {}));
-/**
- * @deprecated Set `CapacitorCustomPlatform` on the window object prior to runtime executing in the web app instead
- */
-CapacitorPlatforms.addPlatform;
-/**
- * @deprecated Set `CapacitorCustomPlatform` on the window object prior to runtime executing in the web app instead
- */
-CapacitorPlatforms.setPlatform;
-
 var ExceptionCode;
 (function (ExceptionCode) {
     /**
@@ -594,23 +587,14 @@ const getPlatformId = (win) => {
 };
 
 const createCapacitor = (win) => {
-    var _a, _b, _c, _d, _e;
     const capCustomPlatform = win.CapacitorCustomPlatform || null;
     const cap = win.Capacitor || {};
     const Plugins = (cap.Plugins = cap.Plugins || {});
-    /**
-     * @deprecated Use `capCustomPlatform` instead, default functions like registerPlugin will function with the new object.
-     */
-    const capPlatforms = win.CapacitorPlatforms;
-    const defaultGetPlatform = () => {
-        return capCustomPlatform !== null
-            ? capCustomPlatform.name
-            : getPlatformId(win);
+    const getPlatform = () => {
+        return capCustomPlatform !== null ? capCustomPlatform.name : getPlatformId(win);
     };
-    const getPlatform = ((_a = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _a === void 0 ? void 0 : _a.getPlatform) || defaultGetPlatform;
-    const defaultIsNativePlatform = () => getPlatform() !== 'web';
-    const isNativePlatform = ((_b = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _b === void 0 ? void 0 : _b.isNativePlatform) || defaultIsNativePlatform;
-    const defaultIsPluginAvailable = (pluginName) => {
+    const isNativePlatform = () => getPlatform() !== 'web';
+    const isPluginAvailable = (pluginName) => {
         const plugin = registeredPlugins.get(pluginName);
         if (plugin === null || plugin === void 0 ? void 0 : plugin.platforms.has(getPlatform())) {
             // JS implementation available for the current platform.
@@ -622,16 +606,10 @@ const createCapacitor = (win) => {
         }
         return false;
     };
-    const isPluginAvailable = ((_c = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _c === void 0 ? void 0 : _c.isPluginAvailable) ||
-        defaultIsPluginAvailable;
-    const defaultGetPluginHeader = (pluginName) => { var _a; return (_a = cap.PluginHeaders) === null || _a === void 0 ? void 0 : _a.find(h => h.name === pluginName); };
-    const getPluginHeader = ((_d = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _d === void 0 ? void 0 : _d.getPluginHeader) || defaultGetPluginHeader;
+    const getPluginHeader = (pluginName) => { var _a; return (_a = cap.PluginHeaders) === null || _a === void 0 ? void 0 : _a.find((h) => h.name === pluginName); };
     const handleError = (err) => win.console.error(err);
-    const pluginMethodNoop = (_target, prop, pluginName) => {
-        return Promise.reject(`${pluginName} does not have an implementation of "${prop}".`);
-    };
     const registeredPlugins = new Map();
-    const defaultRegisterPlugin = (pluginName, jsImplementations = {}) => {
+    const registerPlugin = (pluginName, jsImplementations = {}) => {
         const registeredPlugin = registeredPlugins.get(pluginName);
         if (registeredPlugin) {
             console.warn(`Capacitor plugin "${pluginName}" already registered. Cannot register plugins twice.`);
@@ -647,9 +625,7 @@ const createCapacitor = (win) => {
                         ? (jsImplementation = await jsImplementations[platform]())
                         : (jsImplementation = jsImplementations[platform]);
             }
-            else if (capCustomPlatform !== null &&
-                !jsImplementation &&
-                'web' in jsImplementations) {
+            else if (capCustomPlatform !== null && !jsImplementation && 'web' in jsImplementations) {
                 jsImplementation =
                     typeof jsImplementations['web'] === 'function'
                         ? (jsImplementation = await jsImplementations['web']())
@@ -660,7 +636,7 @@ const createCapacitor = (win) => {
         const createPluginMethod = (impl, prop) => {
             var _a, _b;
             if (pluginHeader) {
-                const methodHeader = pluginHeader === null || pluginHeader === void 0 ? void 0 : pluginHeader.methods.find(m => prop === m.name);
+                const methodHeader = pluginHeader === null || pluginHeader === void 0 ? void 0 : pluginHeader.methods.find((m) => prop === m.name);
                 if (methodHeader) {
                     if (methodHeader.rtype === 'promise') {
                         return (options) => cap.nativePromise(pluginName, prop.toString(), options);
@@ -683,7 +659,7 @@ const createCapacitor = (win) => {
         const createPluginMethodWrapper = (prop) => {
             let remove;
             const wrapper = (...args) => {
-                const p = loadPluginImplementation().then(impl => {
+                const p = loadPluginImplementation().then((impl) => {
                     const fn = createPluginMethod(impl, prop);
                     if (fn) {
                         const p = fn(...args);
@@ -719,7 +695,7 @@ const createCapacitor = (win) => {
                     callbackId,
                 }, callback);
             };
-            const p = new Promise(resolve => call.then(() => resolve({ remove })));
+            const p = new Promise((resolve) => call.then(() => resolve({ remove })));
             p.remove = async () => {
                 console.warn(`Using addListener() without 'await' is deprecated.`);
                 await remove();
@@ -747,30 +723,22 @@ const createCapacitor = (win) => {
         registeredPlugins.set(pluginName, {
             name: pluginName,
             proxy,
-            platforms: new Set([
-                ...Object.keys(jsImplementations),
-                ...(pluginHeader ? [platform] : []),
-            ]),
+            platforms: new Set([...Object.keys(jsImplementations), ...(pluginHeader ? [platform] : [])]),
         });
         return proxy;
     };
-    const registerPlugin = ((_e = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _e === void 0 ? void 0 : _e.registerPlugin) || defaultRegisterPlugin;
     // Add in convertFileSrc for web, it will already be available in native context
     if (!cap.convertFileSrc) {
-        cap.convertFileSrc = filePath => filePath;
+        cap.convertFileSrc = (filePath) => filePath;
     }
     cap.getPlatform = getPlatform;
     cap.handleError = handleError;
     cap.isNativePlatform = isNativePlatform;
     cap.isPluginAvailable = isPluginAvailable;
-    cap.pluginMethodNoop = pluginMethodNoop;
     cap.registerPlugin = registerPlugin;
     cap.Exception = CapacitorException;
     cap.DEBUG = !!cap.DEBUG;
     cap.isLoggingEnabled = !!cap.isLoggingEnabled;
-    // Deprecated props
-    cap.platform = cap.getPlatform();
-    cap.isNative = cap.isNativePlatform();
     return cap;
 };
 const initCapacitorGlobal = (win) => (win.Capacitor = createCapacitor(win));
@@ -785,26 +753,15 @@ const Capacitor = /*#__PURE__*/ initCapacitorGlobal(typeof globalThis !== 'undef
                 ? global
                 : {});
 const registerPlugin = Capacitor.registerPlugin;
-/**
- * @deprecated Provided for backwards compatibility for Capacitor v2 plugins.
- * Capacitor v3 plugins should import the plugin directly. This "Plugins"
- * export is deprecated in v3, and will be removed in v4.
- */
-Capacitor.Plugins;
 
 /**
  * Base class web plugins should extend.
  */
 class WebPlugin {
-    constructor(config) {
+    constructor() {
         this.listeners = {};
         this.retainedEventArguments = {};
         this.windowListeners = {};
-        if (config) {
-            // TODO: add link to upgrade guide
-            console.warn(`Capacitor WebPlugin "${config.name}" config object was deprecated in v3 and will be removed in v4.`);
-            this.config = config;
-        }
     }
     addListener(eventName, listenerFunc) {
         let firstListener = false;
@@ -847,17 +804,18 @@ class WebPlugin {
             }
             return;
         }
-        listeners.forEach(listener => listener(data));
+        listeners.forEach((listener) => listener(data));
     }
     hasListeners(eventName) {
-        return !!this.listeners[eventName].length;
+        var _a;
+        return !!((_a = this.listeners[eventName]) === null || _a === void 0 ? void 0 : _a.length);
     }
     registerWindowListener(windowEventName, pluginEventName) {
         this.windowListeners[pluginEventName] = {
             registered: false,
             windowEventName,
             pluginEventName,
-            handler: event => {
+            handler: (event) => {
                 this.notifyListeners(pluginEventName, event);
             },
         };
@@ -898,7 +856,7 @@ class WebPlugin {
             return;
         }
         delete this.retainedEventArguments[eventName];
-        args.forEach(arg => {
+        args.forEach((arg) => {
             this.notifyListeners(eventName, arg);
         });
     }
@@ -921,7 +879,7 @@ class CapacitorCookiesPluginWeb extends WebPlugin {
     async getCookies() {
         const cookies = document.cookie;
         const cookieMap = {};
-        cookies.split(';').forEach(cookie => {
+        cookies.split(';').forEach((cookie) => {
             if (cookie.length <= 0)
                 return;
             // Replace first "=" with CAP_COOKIE to prevent splitting on additional "="
@@ -938,11 +896,9 @@ class CapacitorCookiesPluginWeb extends WebPlugin {
             const encodedKey = encode(options.key);
             const encodedValue = encode(options.value);
             // Clean & sanitize options
-            const expires = `; expires=${(options.expires || '').replace('expires=', '')}`; // Default is "; expires="
+            const expires = options.expires ? `; expires=${options.expires.replace('expires=', '')}` : '';
             const path = (options.path || '/').replace('path=', ''); // Default is "path=/"
-            const domain = options.url != null && options.url.length > 0
-                ? `domain=${options.url}`
-                : '';
+            const domain = options.url != null && options.url.length > 0 ? `domain=${options.url}` : '';
             document.cookie = `${encodedKey}=${encodedValue || ''}${expires}; path=${path}; ${domain};`;
         }
         catch (error) {
@@ -961,9 +917,7 @@ class CapacitorCookiesPluginWeb extends WebPlugin {
         try {
             const cookies = document.cookie.split(';') || [];
             for (const cookie of cookies) {
-                document.cookie = cookie
-                    .replace(/^ +/, '')
-                    .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+                document.cookie = cookie.replace(/^ +/, '').replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
             }
         }
         catch (error) {
@@ -992,9 +946,7 @@ const readBlobAsBase64 = async (blob) => new Promise((resolve, reject) => {
     reader.onload = () => {
         const base64String = reader.result;
         // remove prefix "data:application/pdf;base64,"
-        resolve(base64String.indexOf(',') >= 0
-            ? base64String.split(',')[1]
-            : base64String);
+        resolve(base64String.indexOf(',') >= 0 ? base64String.split(',')[1] : base64String);
     };
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(blob);
@@ -1005,7 +957,7 @@ const readBlobAsBase64 = async (blob) => new Promise((resolve, reject) => {
  */
 const normalizeHttpHeaders = (headers = {}) => {
     const originalKeys = Object.keys(headers);
-    const loweredKeys = Object.keys(headers).map(k => k.toLocaleLowerCase());
+    const loweredKeys = Object.keys(headers).map((k) => k.toLocaleLowerCase());
     const normalized = loweredKeys.reduce((acc, key, index) => {
         acc[key] = headers[originalKeys[index]];
         return acc;
@@ -1026,7 +978,7 @@ const buildUrlParams = (params, shouldEncode = true) => {
         let item;
         if (Array.isArray(value)) {
             item = '';
-            value.forEach(str => {
+            value.forEach((str) => {
                 encodedValue = shouldEncode ? encodeURIComponent(str) : str;
                 item += `${key}=${encodedValue}&`;
             });
@@ -1064,8 +1016,7 @@ const buildRequestInit = (options, extra = {}) => {
         }
         output.body = params.toString();
     }
-    else if (type.includes('multipart/form-data') ||
-        options.data instanceof FormData) {
+    else if (type.includes('multipart/form-data') || options.data instanceof FormData) {
         const form = new FormData();
         if (options.data instanceof FormData) {
             options.data.forEach((value, key) => {
@@ -1082,8 +1033,7 @@ const buildRequestInit = (options, extra = {}) => {
         headers.delete('content-type'); // content-type will be set by `window.fetch` to includy boundary
         output.headers = headers;
     }
-    else if (type.includes('application/json') ||
-        typeof options.data === 'object') {
+    else if (type.includes('application/json') || typeof options.data === 'object') {
         output.body = JSON.stringify(options.data);
     }
     return output;
@@ -1173,6 +1123,69 @@ class CapacitorHttpPluginWeb extends WebPlugin {
 registerPlugin('CapacitorHttp', {
     web: () => new CapacitorHttpPluginWeb(),
 });
+/******** END HTTP PLUGIN ********/
+/******** SYSTEM BARS PLUGIN ********/
+/**
+ * Available status bar styles.
+ */
+var SystemBarsStyle;
+(function (SystemBarsStyle) {
+    /**
+     * Light system bar content on a dark background.
+     *
+     * @since 8.0.0
+     */
+    SystemBarsStyle["Dark"] = "DARK";
+    /**
+     * For dark system bar content on a light background.
+     *
+     * @since 8.0.0
+     */
+    SystemBarsStyle["Light"] = "LIGHT";
+    /**
+     * The style is based on the device appearance or the underlying content.
+     * If the device is using Dark mode, the system bars content will be light.
+     * If the device is using Light mode, the system bars content will be dark.
+     *
+     * @since 8.0.0
+     */
+    SystemBarsStyle["Default"] = "DEFAULT";
+})(SystemBarsStyle || (SystemBarsStyle = {}));
+/**
+ * Available system bar types.
+ */
+var SystemBarType;
+(function (SystemBarType) {
+    /**
+     * The top status bar on both Android and iOS.
+     *
+     * @since 8.0.0
+     */
+    SystemBarType["StatusBar"] = "StatusBar";
+    /**
+     * The navigation bar (or gesture bar on iOS) on both Android and iOS.
+     *
+     * @since 8.0.0
+     */
+    SystemBarType["NavigationBar"] = "NavigationBar";
+})(SystemBarType || (SystemBarType = {}));
+class SystemBarsPluginWeb extends WebPlugin {
+    async setStyle() {
+        this.unavailable('not available for web');
+    }
+    async setAnimation() {
+        this.unavailable('not available for web');
+    }
+    async show() {
+        this.unavailable('not available for web');
+    }
+    async hide() {
+        this.unavailable('not available for web');
+    }
+}
+registerPlugin('SystemBars', {
+    web: () => new SystemBarsPluginWeb(),
+});
 
 class CapacitorCoreNativeCallerProvider {
     getNativeCaller(_proxyType) {
@@ -1211,5 +1224,5 @@ registerPlugin(corePluginName, {
 // tslint:disable-next-line:variable-name
 const ScanditCaptureCorePlugin = new ScanditCaptureCorePluginImplementation();
 
-export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, capacitorExec, doReturnWithFinish };
+export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, SelectionMode, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, ZoomSwitchOrientation, capacitorExec, doReturnWithFinish };
 //# sourceMappingURL=index.js.map

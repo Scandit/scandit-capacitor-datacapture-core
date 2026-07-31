@@ -32,6 +32,10 @@ public struct CapacitorResult: FrameworksResult {
         }
     }
 
+    public func successAndKeepCallback(result: Any?) {
+        success(result: result)
+    }
+
     public func reject(code: String, message: String?, details: Any?) {
         pluginCall.reject(message ?? code, code)
     }
