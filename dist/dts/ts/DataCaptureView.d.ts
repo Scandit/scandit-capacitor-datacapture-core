@@ -9,6 +9,11 @@ export declare class DataCaptureView {
     get context(): DataCaptureContext | null;
     set context(context: DataCaptureContext | null);
     private _webViewContentOnTop;
+    private htmlElement;
+    private _htmlElementState;
+    private scrollListener;
+    private domObserver;
+    private orientationChangeListener;
     get webViewContentOnTop(): boolean | null;
     set webViewContentOnTop(value: boolean | null);
     get scanAreaMargins(): MarginsWithUnit;
@@ -23,15 +28,17 @@ export declare class DataCaptureView {
     set logoOffset(newValue: PointWithUnit);
     get focusGesture(): FocusGesture | null;
     set focusGesture(newValue: FocusGesture | null);
+    get zoomGestures(): ZoomGesture[];
+    set zoomGestures(newValue: ZoomGesture[]);
+    /** @deprecated Use zoomGestures instead. Will be removed in a future version. */
     get zoomGesture(): ZoomGesture | null;
+    /** @deprecated Use zoomGestures instead. Will be removed in a future version. */
     set zoomGesture(newValue: ZoomGesture | null);
-    private htmlElement;
-    private _htmlElementState;
+    get shouldShowZoomNotification(): boolean;
+    set shouldShowZoomNotification(newValue: boolean);
+    setProperty<T>(name: string, value: T): void;
     private set htmlElementState(value);
     private get htmlElementState();
-    private scrollListener;
-    private domObserver;
-    private orientationChangeListener;
     static forContext(context: Optional<DataCaptureContext>): DataCaptureView;
     constructor();
     connectToElement(element: HTMLElement): void;
