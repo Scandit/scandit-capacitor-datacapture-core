@@ -9,6 +9,7 @@ package com.scandit.capacitor.datacapture.core.handlers;
 import static com.scandit.capacitor.datacapture.core.utils.CapacitorExtensions.*;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
@@ -170,7 +171,7 @@ public class DataCaptureViewHandler {
                   if (imeHeight == lastKnownImeHeight) return;
                   lastKnownImeHeight = imeHeight;
 
-                  int originalHeight = (int) pxFromDp(latestInfo.getHeight());
+                  int originalHeight = (int) pxFromDp(latestInfo.getHeight(), dcView.getContext());
                   ViewGroup.LayoutParams params = dcView.getLayoutParams();
                   params.height =
                       imeHeight > 0 ? Math.max(0, originalHeight - imeHeight) : originalHeight;
@@ -280,13 +281,14 @@ public class DataCaptureViewHandler {
         new Runnable() {
           @Override
           public void run() {
+            Context context = view.getContext();
             view.setVisibility(isVisible ? View.VISIBLE : View.GONE);
-            view.setX(pxFromDp(latestInfo.getLeft()));
-            view.setY(pxFromDp(latestInfo.getTop()));
+            view.setX(pxFromDp(latestInfo.getLeft(), context));
+            view.setY(pxFromDp(latestInfo.getTop(), context));
             ViewGroup.LayoutParams params = view.getLayoutParams();
-            params.width = (int) pxFromDp(latestInfo.getWidth());
+            params.width = (int) pxFromDp(latestInfo.getWidth(), context);
             // Account for keyboard: if keyboard is open, reduce height.
-            int originalHeight = (int) pxFromDp(latestInfo.getHeight());
+            int originalHeight = (int) pxFromDp(latestInfo.getHeight(), context);
             params.height =
                 lastKnownImeHeight > 0
                     ? Math.max(0, originalHeight - lastKnownImeHeight)
