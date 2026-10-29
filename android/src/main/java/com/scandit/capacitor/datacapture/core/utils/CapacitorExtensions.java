@@ -6,9 +6,9 @@
 
 package com.scandit.capacitor.datacapture.core.utils;
 
-import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
+import com.scandit.datacapture.core.internal.sdk.AppAndroidEnvironment;
 
 public final class CapacitorExtensions {
 
@@ -16,7 +16,8 @@ public final class CapacitorExtensions {
     // Private constructor to prevent instantiation
   }
 
-  public static float pxFromDp(float dp, Context context) {
+  public static float pxFromDp(float dp) {
+    android.content.Context context = AppAndroidEnvironment.INSTANCE.getApplicationContext();
     float displayDensity = context.getResources().getDisplayMetrics().density;
     return (dp * displayDensity + 0.5f);
   }
