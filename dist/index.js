@@ -1,4 +1,4 @@
-import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, loadCoreDefaults, getCoreDefaults, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, SelectionMode, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, ZoomSwitchOrientation, registerCoreProxies } from './core.js';
+import { HTMLElementState, BaseDataCaptureView, HtmlElementPosition, HtmlElementSize, ignoreFromSerialization, getCoreDefaults, loadCoreDefaults, buildStaticCoreDefaultsJson, FactoryMaker, AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, CameraSwitchControl, ClusteringMode, Color, ColorFillOverlay, ContextStatus, DataCaptureContext, DataCaptureContextSettings, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogCategory, LogLevel, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, ScanditLogger, SelectionMode, SequenceFrameSource, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, ZoomSwitchControl, ZoomSwitchOrientation, registerCoreProxies } from './core.js';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -297,254 +297,18 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '8.5.5';
+        return '8.7.0';
+    }
+    /**
+     * Version of the native SDK the plugin is running against. Read from the Core defaults
+     * singleton, whose `Version` key is part of the dynamic residual — so this is only populated
+     * once `applyDynamicDefaults()` has completed, and empty before native is reachable.
+     */
+    static get sdkVersion() {
+        var _a;
+        return (_a = getCoreDefaults().Version) !== null && _a !== void 0 ? _a : '';
     }
 }
-
-class CapacitorError {
-    static fromJSON(json) {
-        if (json && json.code && json.message) {
-            return new CapacitorError(json.code, json.message);
-        }
-        else {
-            return null;
-        }
-    }
-    constructor(code, message) {
-        this.code = code;
-        this.message = message;
-    }
-}
-const capacitorExec = (successCallback, errorCallback, pluginName, functionName, args) => {
-    if (window.Scandit && window.Scandit.DEBUG) {
-        // tslint:disable-next-line:no-console
-        console.log(`Called native function: ${functionName}`, args, { success: successCallback, error: errorCallback });
-    }
-    const extendedSuccessCallback = (message) => {
-        const shouldCallback = message && message.shouldNotifyWhenFinished;
-        const finishCallbackID = shouldCallback ? message.finishCallbackID : null;
-        const started = Date.now();
-        let callbackResult;
-        if (successCallback) {
-            callbackResult = successCallback(message);
-        }
-        if (shouldCallback) {
-            const maxCallbackDuration = 50;
-            const callbackDuration = Date.now() - started;
-            if (callbackDuration > maxCallbackDuration) {
-                // tslint:disable-next-line:no-console
-                console.log(`[SCANDIT WARNING] Took ${callbackDuration}ms to execute callback that's blocking native execution. You should keep this duration short, for more information, take a look at the documentation.`);
-            }
-            window.Capacitor.Plugins[pluginName].finishCallback([
-                {
-                    finishCallbackID,
-                    result: callbackResult,
-                },
-            ]);
-        }
-    };
-    const extendedErrorCallback = (error) => {
-        if (errorCallback) {
-            const capacitorError = CapacitorError.fromJSON(error);
-            if (capacitorError !== null) {
-                error = capacitorError;
-            }
-            errorCallback(error);
-        }
-    };
-    window.Capacitor.Plugins[pluginName][functionName](args).then(extendedSuccessCallback, extendedErrorCallback);
-};
-const doReturnWithFinish = (finishCallbackID, result) => {
-    if (window.Capacitor.Plugins.ScanditBarcodeNative) {
-        window.Capacitor.Plugins.ScanditBarcodeNative.finishCallback({ result: Object.assign({ finishCallbackID }, result) });
-    }
-    else if (window.Capacitor.Plugins.ScanditIdNative) {
-        window.Capacitor.Plugins.ScanditIdNative.finishCallback({ result: Object.assign({ finishCallbackID }, result) });
-    }
-    return result;
-};
-
-const pluginName = 'ScanditCaptureCoreNative';
-// tslint:disable-next-line:variable-name
-const Capacitor$1 = {
-    pluginName,
-    defaults: {},
-    exec: (success, error, functionName, args) => capacitorExec(success, error, pluginName, functionName, args),
-};
-const getDefaults = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const defaultsJson = yield window.Capacitor.Plugins[pluginName]['getDefaults']();
-        loadCoreDefaults(defaultsJson);
-        Capacitor$1.defaults = getCoreDefaults();
-    }
-    catch (error) {
-        // tslint:disable-next-line:no-console
-        console.warn(error);
-    }
-    return Capacitor$1.defaults;
-});
-class CapacitorNativeCaller {
-    constructor(pluginName) {
-        this.pluginName = pluginName;
-    }
-    get framework() {
-        return 'capacitor';
-    }
-    get frameworkVersion() {
-        return (() => Capacitor$1.defaults.capacitorVersion)();
-    }
-    callFn(fnName, args, _meta) {
-        // meta parameter ignored - Capacitor handles events automatically through plugin system
-        const plugin = window.Capacitor.Plugins[this.pluginName];
-        if (!plugin || typeof plugin[fnName] !== 'function') {
-            // tslint:disable-next-line:no-console
-            console.error(`Function '${fnName}' not found in plugin '${this.pluginName}'`);
-            return Promise.reject(new Error(`Function '${fnName}' not found in plugin '${this.pluginName}'`));
-        }
-        return plugin[fnName](args);
-    }
-    registerEvent(evName, handler) {
-        return window.Capacitor.Plugins[this.pluginName].addListener(evName, handler);
-    }
-    unregisterEvent(_evName, subscription) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (subscription) {
-                yield subscription.remove();
-            }
-        });
-    }
-    eventHook(ev) {
-        return ev;
-    }
-}
-
-var VolumeButtonObserverEvent;
-(function (VolumeButtonObserverEvent) {
-    VolumeButtonObserverEvent["DidChangeVolume"] = "didChangeVolume";
-})(VolumeButtonObserverEvent || (VolumeButtonObserverEvent = {}));
-class VolumeButtonObserverProxy {
-    static forVolumeButtonObserver(volumeButtonObserver) {
-        const proxy = new VolumeButtonObserverProxy();
-        proxy.volumeButtonObserver = volumeButtonObserver;
-        proxy.subscribe();
-        return proxy;
-    }
-    dispose() {
-        this.unsubscribe();
-    }
-    subscribe() {
-        this.subscriber = window.Capacitor.Plugins[Capacitor$1.pluginName].addListener(VolumeButtonObserverEvent.DidChangeVolume, this.notifyListeners.bind(this));
-    }
-    unsubscribe() {
-        this.subscriber.remove();
-    }
-    notifyListeners(event) {
-        if (!event) {
-            // The event could be undefined/null in case the plugin result did not pass a "message",
-            // which could happen e.g. in case of "ok" results, which could signal e.g. successful
-            // listener subscriptions.
-            return doReturnWithFinish('', null);
-        }
-        if (this.volumeButtonObserver.didChangeVolume && event.name === VolumeButtonObserverEvent.DidChangeVolume) {
-            this.volumeButtonObserver.didChangeVolume();
-            return doReturnWithFinish(event.name, null);
-        }
-    }
-}
-
-class VolumeButtonObserver {
-    constructor(didChangeVolume) {
-        this.didChangeVolume = didChangeVolume;
-        this.initialize();
-    }
-    dispose() {
-        if (this.proxy) {
-            this.proxy.dispose();
-            this.proxy = null;
-            this.didChangeVolume = null;
-        }
-    }
-    initialize() {
-        if (!this.proxy) {
-            this.proxy = VolumeButtonObserverProxy.forVolumeButtonObserver(this);
-        }
-    }
-}
-
-// Core Geometry & Units
-
-var CoreExports = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    AimerViewfinder: AimerViewfinder,
-    get Anchor () { return Anchor; },
-    Brush: Brush,
-    Camera: Camera,
-    get CameraPosition () { return CameraPosition; },
-    CameraSettings: CameraSettings,
-    get ClusteringMode () { return ClusteringMode; },
-    Color: Color,
-    ContextStatus: ContextStatus,
-    DataCaptureContext: DataCaptureContext,
-    DataCaptureContextSettings: DataCaptureContextSettings,
-    DataCaptureVersion: DataCaptureVersion,
-    DataCaptureView: DataCaptureView,
-    get Direction () { return Direction; },
-    get Expiration () { return Expiration; },
-    Feedback: Feedback,
-    get FocusGestureStrategy () { return FocusGestureStrategy; },
-    get FocusRange () { return FocusRange; },
-    get FontFamily () { return FontFamily; },
-    FrameDataSettings: FrameDataSettings,
-    FrameDataSettingsBuilder: FrameDataSettingsBuilder,
-    get FrameSourceState () { return FrameSourceState; },
-    ImageBuffer: ImageBuffer,
-    ImageFrameSource: ImageFrameSource,
-    LaserlineViewfinder: LaserlineViewfinder,
-    LicenseInfo: LicenseInfo,
-    get LogoStyle () { return LogoStyle; },
-    get MacroMode () { return MacroMode; },
-    MarginsWithUnit: MarginsWithUnit,
-    get MeasureUnit () { return MeasureUnit; },
-    NoViewfinder: NoViewfinder,
-    NoneLocationSelection: NoneLocationSelection,
-    NumberWithUnit: NumberWithUnit,
-    OpenSourceSoftwareLicenseInfo: OpenSourceSoftwareLicenseInfo,
-    get Orientation () { return Orientation; },
-    PinchToZoom: PinchToZoom,
-    Point: Point,
-    PointWithUnit: PointWithUnit,
-    Quadrilateral: Quadrilateral,
-    RadiusLocationSelection: RadiusLocationSelection,
-    Rect: Rect,
-    RectWithUnit: RectWithUnit,
-    RectangularLocationSelection: RectangularLocationSelection,
-    RectangularViewfinder: RectangularViewfinder,
-    RectangularViewfinderAnimation: RectangularViewfinderAnimation,
-    get RectangularViewfinderLineStyle () { return RectangularViewfinderLineStyle; },
-    get RectangularViewfinderStyle () { return RectangularViewfinderStyle; },
-    get ScanIntention () { return ScanIntention; },
-    ScanditIcon: ScanditIcon,
-    ScanditIconBuilder: ScanditIconBuilder,
-    get ScanditIconShape () { return ScanditIconShape; },
-    get ScanditIconType () { return ScanditIconType; },
-    get SelectionMode () { return SelectionMode; },
-    Size: Size,
-    SizeWithAspect: SizeWithAspect,
-    SizeWithUnit: SizeWithUnit,
-    SizeWithUnitAndAspect: SizeWithUnitAndAspect,
-    get SizingMode () { return SizingMode; },
-    Sound: Sound,
-    SwipeToZoom: SwipeToZoom,
-    TapToFocus: TapToFocus,
-    get TextAlignment () { return TextAlignment; },
-    get TorchState () { return TorchState; },
-    TorchSwitchControl: TorchSwitchControl,
-    Vibration: Vibration,
-    get VideoResolution () { return VideoResolution; },
-    VolumeButtonObserver: VolumeButtonObserver,
-    ZoomSwitchControl: ZoomSwitchControl,
-    get ZoomSwitchOrientation () { return ZoomSwitchOrientation; }
-});
 
 /*! Capacitor: https://capacitorjs.com/ - MIT License */
 var ExceptionCode;
@@ -743,7 +507,7 @@ const createCapacitor = (win) => {
 };
 const initCapacitorGlobal = (win) => (win.Capacitor = createCapacitor(win));
 
-const Capacitor = /*#__PURE__*/ initCapacitorGlobal(typeof globalThis !== 'undefined'
+const Capacitor$1 = /*#__PURE__*/ initCapacitorGlobal(typeof globalThis !== 'undefined'
     ? globalThis
     : typeof self !== 'undefined'
         ? self
@@ -752,7 +516,7 @@ const Capacitor = /*#__PURE__*/ initCapacitorGlobal(typeof globalThis !== 'undef
             : typeof global !== 'undefined'
                 ? global
                 : {});
-const registerPlugin = Capacitor.registerPlugin;
+const registerPlugin = Capacitor$1.registerPlugin;
 
 /**
  * Base class web plugins should extend.
@@ -821,10 +585,10 @@ class WebPlugin {
         };
     }
     unimplemented(msg = 'not implemented') {
-        return new Capacitor.Exception(msg, ExceptionCode.Unimplemented);
+        return new Capacitor$1.Exception(msg, ExceptionCode.Unimplemented);
     }
     unavailable(msg = 'not available') {
-        return new Capacitor.Exception(msg, ExceptionCode.Unavailable);
+        return new Capacitor$1.Exception(msg, ExceptionCode.Unavailable);
     }
     async removeListener(eventName, listenerFunc) {
         const listeners = this.listeners[eventName];
@@ -1187,9 +951,290 @@ registerPlugin('SystemBars', {
     web: () => new SystemBarsPluginWeb(),
 });
 
+class CapacitorError {
+    static fromJSON(json) {
+        if (json && json.code && json.message) {
+            return new CapacitorError(json.code, json.message);
+        }
+        else {
+            return null;
+        }
+    }
+    constructor(code, message) {
+        this.code = code;
+        this.message = message;
+    }
+}
+const capacitorExec = (successCallback, errorCallback, pluginName, functionName, args) => {
+    if (window.Scandit && window.Scandit.DEBUG) {
+        // tslint:disable-next-line:no-console
+        console.log(`Called native function: ${functionName}`, args, { success: successCallback, error: errorCallback });
+    }
+    const extendedSuccessCallback = (message) => {
+        const shouldCallback = message && message.shouldNotifyWhenFinished;
+        const finishCallbackID = shouldCallback ? message.finishCallbackID : null;
+        const started = Date.now();
+        let callbackResult;
+        if (successCallback) {
+            callbackResult = successCallback(message);
+        }
+        if (shouldCallback) {
+            const maxCallbackDuration = 50;
+            const callbackDuration = Date.now() - started;
+            if (callbackDuration > maxCallbackDuration) {
+                // tslint:disable-next-line:no-console
+                console.log(`[SCANDIT WARNING] Took ${callbackDuration}ms to execute callback that's blocking native execution. You should keep this duration short, for more information, take a look at the documentation.`);
+            }
+            window.Capacitor.Plugins[pluginName].finishCallback([
+                {
+                    finishCallbackID,
+                    result: callbackResult,
+                },
+            ]);
+        }
+    };
+    const extendedErrorCallback = (error) => {
+        if (errorCallback) {
+            const capacitorError = CapacitorError.fromJSON(error);
+            if (capacitorError !== null) {
+                error = capacitorError;
+            }
+            errorCallback(error);
+        }
+    };
+    window.Capacitor.Plugins[pluginName][functionName](args).then(extendedSuccessCallback, extendedErrorCallback);
+};
+const doReturnWithFinish = (finishCallbackID, result) => {
+    if (window.Capacitor.Plugins.ScanditBarcodeNative) {
+        window.Capacitor.Plugins.ScanditBarcodeNative.finishCallback({ result: Object.assign({ finishCallbackID }, result) });
+    }
+    else if (window.Capacitor.Plugins.ScanditIdNative) {
+        window.Capacitor.Plugins.ScanditIdNative.finishCallback({ result: Object.assign({ finishCallbackID }, result) });
+    }
+    return result;
+};
+
+const pluginName = 'ScanditCaptureCoreNative';
+// tslint:disable-next-line:variable-name
+const Capacitor = {
+    pluginName,
+    defaults: {},
+    exec: (success, error, functionName, args) => capacitorExec(success, error, pluginName, functionName, args),
+};
+// Loaded synchronously at module-import time: get<X>Defaults() returns real static values
+// immediately, without waiting on a native round-trip and without the lazy ensureCoreDefaults()
+// fallback ever having to build a real one for Capacitor.
+const staticPlatform = Capacitor$1.getPlatform() === 'ios' ? 'ios' : 'android';
+loadCoreDefaults(buildStaticCoreDefaultsJson(staticPlatform));
+Capacitor.defaults = getCoreDefaults();
+/**
+ * Fetches the narrow set of Core defaults that cannot be resolved statically (device id, SDK
+ * version, probed camera positions, localized accessibility label) and merges them into the
+ * already-loaded defaults singleton. Errors propagate — no swallowing.
+ */
+const applyDynamicDefaults = () => __awaiter(void 0, void 0, void 0, function* () {
+    const dynamicJson = yield window.Capacitor.Plugins[pluginName]['getDynamicDefaults']();
+    // Merge raw JSON into raw JSON, then let parseDefaults produce the typed object — never merge
+    // into the already-parsed one. Merging into parsed values happens to work while the residual is
+    // strings/arrays, but the first dynamic key that parseDefaults converts (a Color, Brush or
+    // PointWithUnit) would land as raw JSON inside a typed object and fail silently at the consumer,
+    // far from here. This also matches how barcode/id/label apply their residual.
+    const merged = buildStaticCoreDefaultsJson(staticPlatform);
+    deepMerge(merged, dynamicJson);
+    // bindInstanceIfNotExists would no-op on this second load, so drop the binding first.
+    FactoryMaker.instances.delete('CoreDefaults');
+    loadCoreDefaults(merged);
+    Capacitor.defaults = getCoreDefaults();
+    return Capacitor.defaults;
+});
+function deepMerge(target, source) {
+    for (const key of Object.keys(source)) {
+        const sourceValue = source[key];
+        const targetValue = target[key];
+        if (sourceValue &&
+            targetValue &&
+            typeof sourceValue === 'object' &&
+            typeof targetValue === 'object' &&
+            !Array.isArray(sourceValue)) {
+            deepMerge(targetValue, sourceValue);
+        }
+        else {
+            target[key] = sourceValue;
+        }
+    }
+}
+class CapacitorNativeCaller {
+    constructor(pluginName) {
+        this.pluginName = pluginName;
+    }
+    get framework() {
+        return 'capacitor';
+    }
+    get frameworkVersion() {
+        return (() => Capacitor.defaults.capacitorVersion)();
+    }
+    callFn(fnName, args, _meta) {
+        // meta parameter ignored - Capacitor handles events automatically through plugin system
+        const plugin = window.Capacitor.Plugins[this.pluginName];
+        if (!plugin || typeof plugin[fnName] !== 'function') {
+            // tslint:disable-next-line:no-console
+            console.error(`Function '${fnName}' not found in plugin '${this.pluginName}'`);
+            return Promise.reject(new Error(`Function '${fnName}' not found in plugin '${this.pluginName}'`));
+        }
+        return plugin[fnName](args);
+    }
+    registerEvent(evName, handler) {
+        return window.Capacitor.Plugins[this.pluginName].addListener(evName, handler);
+    }
+    unregisterEvent(_evName, subscription) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (subscription) {
+                yield subscription.remove();
+            }
+        });
+    }
+    eventHook(ev) {
+        return ev;
+    }
+}
+
+var VolumeButtonObserverEvent;
+(function (VolumeButtonObserverEvent) {
+    VolumeButtonObserverEvent["DidChangeVolume"] = "didChangeVolume";
+})(VolumeButtonObserverEvent || (VolumeButtonObserverEvent = {}));
+class VolumeButtonObserverProxy {
+    static forVolumeButtonObserver(onDidChangeVolume) {
+        const proxy = new VolumeButtonObserverProxy();
+        proxy.onDidChangeVolume = onDidChangeVolume;
+        proxy.subscribe();
+        return proxy;
+    }
+    dispose() {
+        this.unsubscribe();
+    }
+    subscribe() {
+        this.subscriber = window.Capacitor.Plugins[Capacitor.pluginName].addListener(VolumeButtonObserverEvent.DidChangeVolume, this.notifyListeners.bind(this));
+    }
+    unsubscribe() {
+        this.subscriber.remove();
+    }
+    notifyListeners(event) {
+        if (!event) {
+            // The event could be undefined/null in case the plugin result did not pass a "message",
+            // which could happen e.g. in case of "ok" results, which could signal e.g. successful
+            // listener subscriptions.
+            return doReturnWithFinish('', null);
+        }
+        if (event.name === VolumeButtonObserverEvent.DidChangeVolume) {
+            this.onDidChangeVolume();
+            return doReturnWithFinish(event.name, null);
+        }
+    }
+}
+
+class VolumeButtonObserver {
+    constructor(didChangeVolume) {
+        this.didChangeVolume = didChangeVolume;
+        this.initialize();
+    }
+    dispose() {
+        if (this.proxy) {
+            this.proxy.dispose();
+            this.proxy = null;
+            this.didChangeVolume = null;
+        }
+    }
+    initialize() {
+        if (!this.proxy) {
+            this.proxy = VolumeButtonObserverProxy.forVolumeButtonObserver(() => { var _a; return (_a = this.didChangeVolume) === null || _a === void 0 ? void 0 : _a.call(this); });
+        }
+    }
+}
+
+// Core Geometry & Units
+
+var CoreExports = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    AimerViewfinder: AimerViewfinder,
+    get Anchor () { return Anchor; },
+    Brush: Brush,
+    Camera: Camera,
+    get CameraPosition () { return CameraPosition; },
+    CameraSettings: CameraSettings,
+    CameraSwitchControl: CameraSwitchControl,
+    get ClusteringMode () { return ClusteringMode; },
+    Color: Color,
+    ColorFillOverlay: ColorFillOverlay,
+    ContextStatus: ContextStatus,
+    DataCaptureContext: DataCaptureContext,
+    DataCaptureContextSettings: DataCaptureContextSettings,
+    DataCaptureVersion: DataCaptureVersion,
+    DataCaptureView: DataCaptureView,
+    get Direction () { return Direction; },
+    get Expiration () { return Expiration; },
+    Feedback: Feedback,
+    get FocusGestureStrategy () { return FocusGestureStrategy; },
+    get FocusRange () { return FocusRange; },
+    get FontFamily () { return FontFamily; },
+    FrameDataSettings: FrameDataSettings,
+    FrameDataSettingsBuilder: FrameDataSettingsBuilder,
+    get FrameSourceState () { return FrameSourceState; },
+    ImageBuffer: ImageBuffer,
+    ImageFrameSource: ImageFrameSource,
+    LaserlineViewfinder: LaserlineViewfinder,
+    LicenseInfo: LicenseInfo,
+    get LogCategory () { return LogCategory; },
+    get LogLevel () { return LogLevel; },
+    get LogoStyle () { return LogoStyle; },
+    get MacroMode () { return MacroMode; },
+    MarginsWithUnit: MarginsWithUnit,
+    get MeasureUnit () { return MeasureUnit; },
+    NoViewfinder: NoViewfinder,
+    NoneLocationSelection: NoneLocationSelection,
+    NumberWithUnit: NumberWithUnit,
+    OpenSourceSoftwareLicenseInfo: OpenSourceSoftwareLicenseInfo,
+    get Orientation () { return Orientation; },
+    PinchToZoom: PinchToZoom,
+    Point: Point,
+    PointWithUnit: PointWithUnit,
+    Quadrilateral: Quadrilateral,
+    RadiusLocationSelection: RadiusLocationSelection,
+    Rect: Rect,
+    RectWithUnit: RectWithUnit,
+    RectangularLocationSelection: RectangularLocationSelection,
+    RectangularViewfinder: RectangularViewfinder,
+    RectangularViewfinderAnimation: RectangularViewfinderAnimation,
+    get RectangularViewfinderLineStyle () { return RectangularViewfinderLineStyle; },
+    get RectangularViewfinderStyle () { return RectangularViewfinderStyle; },
+    get ScanIntention () { return ScanIntention; },
+    ScanditIcon: ScanditIcon,
+    ScanditIconBuilder: ScanditIconBuilder,
+    get ScanditIconShape () { return ScanditIconShape; },
+    get ScanditIconType () { return ScanditIconType; },
+    ScanditLogger: ScanditLogger,
+    get SelectionMode () { return SelectionMode; },
+    SequenceFrameSource: SequenceFrameSource,
+    Size: Size,
+    SizeWithAspect: SizeWithAspect,
+    SizeWithUnit: SizeWithUnit,
+    SizeWithUnitAndAspect: SizeWithUnitAndAspect,
+    get SizingMode () { return SizingMode; },
+    Sound: Sound,
+    SwipeToZoom: SwipeToZoom,
+    TapToFocus: TapToFocus,
+    get TextAlignment () { return TextAlignment; },
+    get TorchState () { return TorchState; },
+    TorchSwitchControl: TorchSwitchControl,
+    Vibration: Vibration,
+    get VideoResolution () { return VideoResolution; },
+    VolumeButtonObserver: VolumeButtonObserver,
+    ZoomSwitchControl: ZoomSwitchControl,
+    get ZoomSwitchOrientation () { return ZoomSwitchOrientation; }
+});
+
 class CapacitorCoreNativeCallerProvider {
     getNativeCaller(_proxyType) {
-        return new CapacitorNativeCaller(Capacitor$1.pluginName);
+        return new CapacitorNativeCaller(Capacitor.pluginName);
     }
 }
 
@@ -1202,7 +1247,9 @@ initProxy();
 class ScanditCaptureCorePluginImplementation {
     initializePlugins() {
         return __awaiter(this, void 0, void 0, function* () {
-            const coreDefaults = yield getDefaults();
+            // Static defaults are already loaded synchronously at module-import time (see
+            // Capacitor.ts); only the narrow dynamic residual needs to be awaited here.
+            const coreDefaults = yield applyDynamicDefaults();
             let api = Object.assign({}, CoreExports);
             for (const key of Object.keys(window.Capacitor.Plugins)) {
                 if (key.startsWith('Scandit') && key.indexOf('Native') < 0 && key !== corePluginName) {
@@ -1224,5 +1271,5 @@ registerPlugin(corePluginName, {
 // tslint:disable-next-line:variable-name
 const ScanditCaptureCorePlugin = new ScanditCaptureCorePluginImplementation();
 
-export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, Capacitor$1 as CapacitorCore, CapacitorNativeCaller, ClusteringMode, Color, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, SelectionMode, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, ZoomSwitchOrientation, capacitorExec, doReturnWithFinish };
+export { AimerViewfinder, Anchor, Brush, Camera, CameraPosition, CameraSettings, CameraSwitchControl, Capacitor as CapacitorCore, CapacitorNativeCaller, ClusteringMode, Color, ColorFillOverlay, ContextStatus, DataCaptureContext, DataCaptureContextSettings, DataCaptureVersion, DataCaptureView, Direction, Expiration, Feedback, FocusGestureStrategy, FocusRange, FontFamily, FrameDataSettings, FrameDataSettingsBuilder, FrameSourceState, ImageBuffer, ImageFrameSource, LaserlineViewfinder, LicenseInfo, LogCategory, LogLevel, LogoStyle, MacroMode, MarginsWithUnit, MeasureUnit, NoViewfinder, NoneLocationSelection, NumberWithUnit, OpenSourceSoftwareLicenseInfo, Orientation, PinchToZoom, Point, PointWithUnit, Quadrilateral, RadiusLocationSelection, Rect, RectWithUnit, RectangularLocationSelection, RectangularViewfinder, RectangularViewfinderAnimation, RectangularViewfinderLineStyle, RectangularViewfinderStyle, ScanIntention, ScanditCaptureCorePlugin, ScanditCaptureCorePluginImplementation, ScanditIcon, ScanditIconBuilder, ScanditIconShape, ScanditIconType, ScanditLogger, SelectionMode, SequenceFrameSource, Size, SizeWithAspect, SizeWithUnit, SizeWithUnitAndAspect, SizingMode, Sound, SwipeToZoom, TapToFocus, TextAlignment, TorchState, TorchSwitchControl, Vibration, VideoResolution, VolumeButtonObserver, ZoomSwitchControl, ZoomSwitchOrientation, capacitorExec, doReturnWithFinish };
 //# sourceMappingURL=index.js.map

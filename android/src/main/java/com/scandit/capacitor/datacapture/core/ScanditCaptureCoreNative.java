@@ -24,6 +24,7 @@ import com.scandit.datacapture.frameworks.core.errors.ParameterNullError;
 import com.scandit.datacapture.frameworks.core.events.Emitter;
 import com.scandit.datacapture.frameworks.core.lifecycle.ActivityLifecycleDispatcher;
 import com.scandit.datacapture.frameworks.core.lifecycle.DefaultActivityLifecycle;
+import com.scandit.datacapture.frameworks.core.listeners.registry.CoreEventEmitter;
 import com.scandit.datacapture.frameworks.core.locator.DefaultServiceLocator;
 import com.scandit.datacapture.frameworks.core.result.NoopFrameworksResult;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public class ScanditCaptureCoreNative extends Plugin implements Emitter {
   public ScanditCaptureCoreNative() {
     this.lifecycleDispatcher = DefaultActivityLifecycle.Companion.getInstance();
     this.captureViewHandler = new DataCaptureViewHandler();
+    CoreEventEmitter.INSTANCE.setEmitter(this);
     this.coreModule = CoreModule.create(this);
     this.lastFrameSourceState = FrameSourceState.OFF;
     this.plugins = new ArrayList<>();
@@ -187,12 +189,12 @@ public class ScanditCaptureCoreNative extends Plugin implements Emitter {
   // endregion
 
   @PluginMethod
-  public void getDefaults(PluginCall call) {
+  public void getDynamicDefaults(PluginCall call) {
     try {
-      Map<String, Object> defaults = coreModule.getDefaults();
+      Map<String, Object> defaults = coreModule.getDynamicDefaults();
       call.resolve(JSObject.fromJSONObject(new JSONObject(defaults)));
     } catch (JSONException e) {
-      call.reject("Failed to get defaults: " + e.getMessage());
+      call.reject("Failed to get dynamic defaults: " + e.getMessage());
     }
   }
 
