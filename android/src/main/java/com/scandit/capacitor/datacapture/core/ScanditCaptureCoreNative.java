@@ -272,6 +272,11 @@ public class ScanditCaptureCoreNative extends Plugin implements Emitter {
     return this.hasListenersForEvent(eventName);
   }
 
+  @Override
+  public boolean hasRegisteredViewListenersForEvent(int viewId, @NonNull String eventName) {
+    return false;
+  }
+
   /**
    * Single entry point for all Core operations. Routes method calls to the appropriate command via
    * the shared command factory.

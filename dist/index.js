@@ -297,7 +297,7 @@ __decorate([
 
 class DataCaptureVersion {
     static get pluginVersion() {
-        return '8.7.0';
+        return '8.7.1';
     }
     /**
      * Version of the native SDK the plugin is running against. Read from the Core defaults
