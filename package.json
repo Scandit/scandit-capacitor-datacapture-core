@@ -1,6 +1,6 @@
 {
   "name": "scandit-capacitor-datacapture-core",
-  "version": "8.6.3",
+  "version": "8.7.2",
   "description": "Scandit Data Capture SDK for Capacitor",
   "license": "Apache-2.0",
   "private": false,
@@ -14,6 +14,7 @@
   "types": "dist/dts/index.d.ts",
   "scripts": {
     "jest": "jest",
+    "test": "jest --coverage --maxWorkers=12 --passWithNoTests",
     "coverage": "jest --coverage",
     "lint": "eslint ./src",
     "build": "rollup -c rollup.config.js --bundleConfigAsCjs",
@@ -22,6 +23,8 @@
     "docs": "typedoc --out docs/ --entryPoints ./src/index.ts"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-proposal-decorators": "^7.24.0",
     "@babel/preset-env": "^7.24.0",
     "@babel/preset-typescript": "^7.23.3",
     "@capacitor/android": ">=5.0.0 <9.0.0",
@@ -48,9 +51,6 @@
   "peerDependencies": {
     "@capacitor/core": "5.x - 8.x"
   },
-  "dependencies": {
-    "eventemitter3": "5.0.1"
-  },
   "files": [
     "dist/",
     "ios/",
@@ -68,5 +68,8 @@
       "src": "android"
     }
   },
-  "packageManager": "pnpm@10.15.0"
+  "packageManager": "pnpm@10.15.0",
+  "dependencies": {
+    "eventemitter3": "5.0.1"
+  }
 }

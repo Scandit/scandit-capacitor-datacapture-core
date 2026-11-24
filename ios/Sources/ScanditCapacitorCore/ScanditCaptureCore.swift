@@ -11,7 +11,7 @@ import ScanditFrameworksCore
 import WebKit
 
 #if !COCOAPODS
-import ScanditCapacitorDatacaptureCoreObjC
+import _ScanditFrameworksCorePrivate
 #endif
 
 public protocol ContextChangeListener: AnyObject {
@@ -29,7 +29,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin, DeserializationL
         CAPPluginMethod(name: "setDataCaptureViewPositionAndSize", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "showDataCaptureView", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "hideDataCaptureView", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "getDefaults", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getDynamicDefaults", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "executeCore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "createDataCaptureView", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeDataCaptureView", returnType: CAPPluginReturnPromise),
@@ -81,6 +81,7 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin, DeserializationL
     public override func load() {
         super.load()
         let emitter = CapacitorEventEmitter(with: self)
+        CoreEventEmitter.emitter = emitter
         coreModule = CoreModule.create(emitter: emitter)
         DefaultServiceLocator.shared.register(module: coreModule)
         coreModule.didStart()
@@ -182,9 +183,9 @@ public class ScanditCapacitorCore: CAPPlugin, CAPBridgedPlugin, DeserializationL
 
     // MARK: - Defaults
 
-    @objc(getDefaults:)
-    func getDefaults(_ call: CAPPluginCall) {
-        let defaults = coreModule.getDefaults()
+    @objc(getDynamicDefaults:)
+    func getDynamicDefaults(_ call: CAPPluginCall) {
+        let defaults = coreModule.getDynamicDefaults()
         call.resolve(defaults as PluginCallResultData)
     }
 
